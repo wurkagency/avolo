@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/server/db";
+import { loadAirportsFromCsv } from "@/lib/server/airportCsv";
 import type { AirportOption } from "@/types/trip";
 
 // In-memory cache — populated on first request, static for the process lifetime
@@ -8,26 +9,27 @@ let airportCache: AirportOption[] | null = null;
 async function getAirportCache(): Promise<AirportOption[]> {
   if (airportCache !== null) return airportCache;
 
-  const rows = await db.airport.findMany({
-    where: { iataCode: { not: null } },
-    select: {
-      iataCode: true,
-      name: true,
-      municipality: true,
-      country: true,
-    },
-    orderBy: [{ scheduledService: "desc" }, { name: "asc" }],
-  });
+  try {
+    const rows = await db.airport.findMany({
+      where: { iataCode: { not: null } },
+      select: { iataCode: true, name: true, municipality: true, country: true },
+      orderBy: [{ scheduledService: "desc" }, { name: "asc" }],
+    });
 
-  airportCache = rows
-    .filter((r): r is AirportOption & { iataCode: string } => r.iataCode !== null)
-    .map((r) => ({
-      iataCode: r.iataCode,
-      name: r.name,
-      municipality: r.municipality,
-      country: r.country,
-    }));
+    const dbAirports = rows
+      .filter((r): r is AirportOption & { iataCode: string } => r.iataCode !== null)
+      .map((r) => ({ iataCode: r.iataCode, name: r.name, municipality: r.municipality, country: r.country }));
 
+    if (dbAirports.length > 0) {
+      airportCache = dbAirports;
+      return airportCache;
+    }
+  } catch {
+    // DB unavailable — fall through to CSV
+  }
+
+  // DB empty or unavailable — load from bundled CSV
+  airportCache = loadAirportsFromCsv();
   return airportCache;
 }
 

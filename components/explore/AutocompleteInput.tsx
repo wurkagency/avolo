@@ -71,7 +71,7 @@ export function AutocompleteInput({
 
     setLoading(true);
     try {
-      const results = await searchAirports(query);
+      const results = await searchAirports(query, abortRef.current?.signal);
       setOptions(results);
       setOpen(results.length > 0);
       setActiveIndex(-1);

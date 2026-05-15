@@ -1,11 +1,11 @@
 import type { AirportOption } from "@/types/trip";
 
-export async function searchAirports(query: string): Promise<AirportOption[]> {
+export async function searchAirports(query: string, signal?: AbortSignal): Promise<AirportOption[]> {
   const q = query.trim();
   if (q.length < 2) return [];
 
   const res = await fetch(`/api/airports?q=${encodeURIComponent(q)}`, {
-    signal: AbortSignal.timeout(5000),
+    signal: signal ?? AbortSignal.timeout(5000),
   });
 
   if (!res.ok) return [];
