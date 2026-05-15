@@ -9,34 +9,114 @@ import { ResultsGrid } from "@/components/results/ResultsGrid";
 import type { ServiceType } from "@/types/trip";
 import type { NormalizedResult } from "@/types/search";
 
+type TripSummary = {
+  status: string;
+  services: ServiceType[];
+  departureName: string;
+  destinationName: string;
+};
+
+async function loadCachedResults(
+  tripId: string,
+  services: ServiceType[],
+): Promise<Partial<Record<ServiceType, NormalizedResult[]>>> {
+  const fetches = await Promise.all(
+    services.map((type) =>
+      fetch(`/api/trips/${encodeURIComponent(tripId)}/results?serviceType=${type}`)
+        .then((r) => (r.ok ? (r.json() as Promise<{ results: NormalizedResult[] }>) : { results: [] }))
+        .then((d) => ({ type, results: d.results ?? [] })),
+    ),
+  );
+  const byType: Partial<Record<ServiceType, NormalizedResult[]>> = {};
+  for (const { type, results } of fetches) {
+    byType[type] = results;
+  }
+  return byType;
+}
+
 export function ResultsPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const tripId = params.get("tripId");
 
-  const requestedServices = useTripStore((s) => s.services);
-  const departure = useTripStore((s) => s.departure);
-  const destination = useTripStore((s) => s.destination);
+  const storeServices = useTripStore((s) => s.services);
+  const storeDeparture = useTripStore((s) => s.departure);
+  const storeDestination = useTripStore((s) => s.destination);
 
-  const { status, results, isDone, error } = useSSEStream(tripId);
+  const [trip, setTrip] = useState<TripSummary | null>(null);
+  const [tripLoading, setTripLoading] = useState(true);
+  const [cachedResults, setCachedResults] = useState<Partial<Record<ServiceType, NormalizedResult[]>> | null>(null);
 
-  // Track per-category errors (when server sends results:[] with error field)
-  const [categoryErrors, setCategoryErrors] = useState<Partial<Record<ServiceType, string>>>({});
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Redirect if no tripId
+  // Fetch trip status on mount; poll every 2 s while SEARCHING
+  useEffect(() => {
+    if (!tripId) {
+      setTripLoading(false);
+      return;
+    }
+
+    async function check() {
+      const r = await fetch(`/api/trips/${encodeURIComponent(tripId!)}`);
+      if (!r.ok) { setTripLoading(false); return; }
+      const t = (await r.json()) as TripSummary;
+      setTrip(t);
+      setTripLoading(false);
+      if (t.status === "SEARCHING") {
+        pollRef.current = setTimeout(check, 2000);
+      }
+    }
+
+    check();
+    return () => { if (pollRef.current) clearTimeout(pollRef.current); };
+  }, [tripId]);
+
+  // Load cached results when trip is already COMPLETE or STALE
+  useEffect(() => {
+    if (!tripId || !trip || cachedResults) return;
+    if (trip.status !== "COMPLETE" && trip.status !== "STALE") return;
+    loadCachedResults(tripId, trip.services).then(setCachedResults);
+  }, [tripId, trip, cachedResults]);
+
+  // Only open SSE for DRAFT trips (not yet searched); null disables the hook
+  const needsStream = !tripLoading && trip?.status === "DRAFT";
+  const { status, results: sseResults, isDone: sseIsDone, error: sseError } = useSSEStream(
+    needsStream ? tripId : null,
+  );
+
   useEffect(() => {
     if (!tripId) router.replace("/explore");
   }, [tripId, router]);
 
   if (!tripId) return null;
 
+  const isComplete = trip?.status === "COMPLETE" || trip?.status === "STALE";
+  const isPolling = trip?.status === "SEARCHING";
+
+  if (tripLoading || isPolling) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-12">
+        <div className="flex items-center gap-3 text-on-surface-variant">
+          <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span>{isPolling ? "Search in progress…" : "Loading…"}</span>
+        </div>
+      </main>
+    );
+  }
+
+  const results = isComplete ? (cachedResults ?? {}) : sseResults;
+  const isDone = isComplete ? cachedResults !== null : sseIsDone;
+  const error = isComplete ? null : sseError;
+  const requestedServices = trip?.services ?? storeServices;
+  const departureName = trip?.departureName ?? storeDeparture?.name ?? "";
+  const destinationName = trip?.destinationName ?? storeDestination?.name ?? "";
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-on-surface">
-          {departure?.name && destination?.name
-            ? `${departure.name} → ${destination.name}`
+          {departureName && destinationName
+            ? `${departureName} → ${destinationName}`
             : "Your trip results"}
         </h1>
         <p className="text-on-surface-variant mt-1 text-sm">
@@ -46,15 +126,15 @@ export function ResultsPageInner() {
         </p>
       </div>
 
-      {/* Streaming status banner */}
-      <div className="mb-6">
-        <SSEStatus status={status} isDone={isDone} error={error} />
-      </div>
+      {!isComplete && (
+        <div className="mb-6">
+          <SSEStatus status={status} isDone={isDone} error={error} />
+        </div>
+      )}
 
-      {/* Results — renders each category as SSE delivers it */}
       <ResultsGrid
-        results={results as Partial<Record<ServiceType, NormalizedResult[]>>}
-        categoryErrors={categoryErrors}
+        results={results}
+        categoryErrors={{}}
         tripId={tripId}
         requestedServices={requestedServices}
       />
