@@ -31,6 +31,7 @@ import { fetchTravelPayoutsCars } from "@/server/providers/cars/travelPayoutsCar
 import { normalizeCars } from "@/server/providers/cars/carNormalizer";
 import { fetchExcursions } from "@/server/providers/excursions/excursionProvider";
 import { normalizeExcursions } from "@/server/providers/excursions/excursionNormalizer";
+import { hotelFallbacks, carFallbacks, excursionFallbacks } from "@/server/providers/stubs/fallbacks";
 import type { SearchRequest } from "@/types/search";
 
 export type EmitFn = (event: SSEEvent) => void;
@@ -92,6 +93,10 @@ async function fetchAndRankHotels(
     console.error("[searchService] TravelPayouts hotels failed:", err instanceof Error ? err.message : err);
   }
 
+  if (normalized.length === 0) {
+    normalized = hotelFallbacks(req);
+  }
+
   if (normalized.length > 0) {
     const nights = req.returnDate
       ? Math.max(1, Math.round(
@@ -125,6 +130,10 @@ async function fetchAndRankCars(
     console.error("[searchService] TravelPayouts cars failed:", err instanceof Error ? err.message : err);
   }
 
+  if (normalized.length === 0) {
+    normalized = carFallbacks(req);
+  }
+
   if (normalized.length > 0) {
     const days = req.returnDate
       ? Math.max(1, Math.round(
@@ -156,6 +165,10 @@ async function fetchAndRankExcursions(
     normalized.push(...normalizeExcursions(raw));
   } catch (err) {
     console.error("[searchService] Excursions failed:", err instanceof Error ? err.message : err);
+  }
+
+  if (normalized.length === 0) {
+    normalized = excursionFallbacks(req);
   }
 
   if (normalized.length > 0) {
