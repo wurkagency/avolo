@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import {
   useTripStore,
   selectDates,
@@ -10,7 +11,7 @@ import { StepWrapper } from "@/components/explore/StepWrapper";
 
 export default function ExploreStep3Page() {
   const router = useRouter();
-  const { departureDate, returnDate, isOneWay, flexibility } = useTripStore(selectDates);
+  const { departureDate, returnDate, isOneWay, flexibility } = useTripStore(useShallow(selectDates));
   const setDates = useTripStore((s) => s.setDates);
   const setFlexibility = useTripStore((s) => s.setFlexibility);
 

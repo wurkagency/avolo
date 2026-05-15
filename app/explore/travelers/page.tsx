@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import { useTripStore, selectTravelers } from "@/lib/state/tripStore";
 import { TravelerCounter } from "@/components/explore/TravelerCounter";
 import { StepWrapper } from "@/components/explore/StepWrapper";
 
 export default function ExploreStep4Page() {
   const router = useRouter();
-  const { adults, children, hasDisability } = useTripStore(selectTravelers);
+  const { adults, children, hasDisability } = useTripStore(useShallow(selectTravelers));
   const setTravelers = useTripStore((s) => s.setTravelers);
 
   return (

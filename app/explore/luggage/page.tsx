@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import { useTripStore, selectLuggage } from "@/lib/state/tripStore";
 import { LuggageSelector } from "@/components/explore/LuggageSelector";
 import { StepWrapper } from "@/components/explore/StepWrapper";
@@ -10,7 +11,7 @@ import type { SearchRequest } from "@/types/search";
 
 export default function ExploreStep5Page() {
   const router = useRouter();
-  const { handLuggage, checkedLuggage, specialLuggage } = useTripStore(selectLuggage);
+  const { handLuggage, checkedLuggage, specialLuggage } = useTripStore(useShallow(selectLuggage));
   const setLuggage = useTripStore((s) => s.setLuggage);
   const tripState = useTripStore((s) => s);
   const [submitting, setSubmitting] = useState(false);
