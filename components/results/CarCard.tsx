@@ -16,8 +16,13 @@ export function CarCard({ result }: CarCardProps) {
   if (!c) return null;
 
   return (
-    <article className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
+    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex flex-col gap-4">
+      {c.imageUrl && (
+        <div className="h-40 bg-surface-container overflow-hidden">
+          <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="flex items-start justify-between gap-3 px-5 pt-1">
         <div>
           <p className="font-semibold text-on-surface">{c.make} {c.model}</p>
           <p className="text-xs text-on-surface-variant mt-0.5 capitalize">
@@ -30,7 +35,7 @@ export function CarCard({ result }: CarCardProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 text-sm text-on-surface-variant">
+      <div className="flex flex-col gap-1 text-sm text-on-surface-variant px-5">
         <div className="flex items-start gap-2">
           <span className="material-symbols-outlined text-base">location_on</span>
           <div>
@@ -41,7 +46,7 @@ export function CarCard({ result }: CarCardProps) {
         <p className="text-xs ml-6">{c.days} day{c.days !== 1 ? "s" : ""} · {c.insurance}</p>
       </div>
 
-      <div className="flex items-center justify-between border-t border-outline-variant pt-3">
+      <div className="flex items-center justify-between border-t border-outline-variant pt-3 px-5 pb-5">
         <div>
           <p className="text-2xl font-bold text-primary">{format(result.priceEur)}</p>
           <p className="text-xs text-on-surface-variant">total for {c.days} day{c.days !== 1 ? "s" : ""}</p>
@@ -57,7 +62,7 @@ export function CarCard({ result }: CarCardProps) {
       </div>
 
       {result.aiSummary && (
-        <p className="text-xs text-on-surface-variant border-t border-outline-variant pt-3">{result.aiSummary}</p>
+        <p className="text-xs text-on-surface-variant border-t border-outline-variant pt-3 px-5 pb-5">{result.aiSummary}</p>
       )}
     </article>
   );

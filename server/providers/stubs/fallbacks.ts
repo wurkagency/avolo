@@ -67,7 +67,7 @@ export function hotelFallbacks(req: SearchRequest): NormalizedResult[] {
         roomType: t.room,
         breakfast: t.breakfast,
         cancellationPolicy: isRefundable ? "free" : "non-refundable",
-        imageUrl: null,
+        imageUrl: `https://picsum.photos/seed/hotel-${i}-${dest}/800/400`,
       },
       car: null,
       excursion: null,
@@ -123,6 +123,7 @@ export function carFallbacks(req: SearchRequest): NormalizedResult[] {
         days: rentalDays,
         insurance: c.insurance,
         supplier: c.supplier,
+        imageUrl: `https://picsum.photos/seed/car-${c.make.toLowerCase()}-${c.model.toLowerCase()}/800/400`,
       },
       excursion: null,
     } satisfies NormalizedResult;
@@ -167,7 +168,7 @@ export function excursionFallbacks(req: SearchRequest): NormalizedResult[] {
       date: req.departureDate,
       includes: [...e.includes],
       groupSize: "Up to 15 people",
-      imageUrl: null,
+      imageUrl: `https://picsum.photos/seed/excursion-${e.category}/800/400`,
     },
   } satisfies NormalizedResult));
 }

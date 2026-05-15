@@ -59,6 +59,7 @@ export interface CarDetails {
   days: number;
   insurance: string;
   supplier: string;
+  imageUrl: string | null;
 }
 
 export interface ExcursionDetails {

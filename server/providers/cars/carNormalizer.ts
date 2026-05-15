@@ -33,6 +33,7 @@ export function normalizeCars(raw: TravelPayoutsCarRaw[]): NormalizedResult[] {
         days: car.days,
         insurance: car.insurance,
         supplier: car.supplier,
+        imageUrl: null,
       },
       excursion: null,
     } satisfies NormalizedResult;
