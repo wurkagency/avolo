@@ -1,9 +1,17 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTripStore, selectDeparture, selectDestination } from "@/lib/state/tripStore";
 import { AutocompleteInput } from "@/components/explore/AutocompleteInput";
 import { MicButton } from "@/components/explore/MicButton";
+import { searchAirports } from "@/lib/api/airportsClient";
+import type { AirportOption } from "@/types/trip";
+
+function toDestination(airport: AirportOption) {
+  const city = airport.municipality ?? airport.name;
+  return { iata: airport.iataCode, name: `${city} (${airport.iataCode})` };
+}
 
 export function HomeSearch() {
   const router = useRouter();
@@ -20,6 +28,28 @@ export function HomeSearch() {
       router.push("/explore");
     }
   }
+
+  const handleTranscript = useCallback(
+    async (text: string) => {
+      // Parse "from X to Y" or "X to Y" patterns
+      const match = text.match(/(?:from\s+)?(.+?)\s+to\s+(.+)/i);
+
+      if (match) {
+        const [, depText, destText] = match;
+        const [depResults, destResults] = await Promise.all([
+          depText ? searchAirports(depText.trim()) : Promise.resolve([]),
+          destText ? searchAirports(destText.trim()) : Promise.resolve([]),
+        ]);
+        if (depResults[0]) setDeparture(toDestination(depResults[0]));
+        if (destResults[0]) setDestination(toDestination(destResults[0]));
+      } else {
+        // Single term — treat as destination
+        const results = await searchAirports(text.trim());
+        if (results[0]) setDestination(toDestination(results[0]));
+      }
+    },
+    [setDeparture, setDestination],
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -38,7 +68,7 @@ export function HomeSearch() {
         onEnter={proceed}
       />
       <div className="flex items-center justify-between gap-4 pt-1">
-        <MicButton />
+        <MicButton onTranscript={handleTranscript} />
         <button
           type="button"
           onClick={proceed}

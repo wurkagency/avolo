@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 
 interface MicButtonProps {
@@ -9,18 +9,30 @@ interface MicButtonProps {
 }
 
 export function MicButton({ onTranscript, className }: MicButtonProps) {
+  const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
-  const [supported] = useState(() => typeof window !== "undefined" && "webkitSpeechRecognition" in window);
+
+  // Detect support client-side only to avoid hydration mismatch
+  useEffect(() => {
+    setSupported(
+      "SpeechRecognition" in window || "webkitSpeechRecognition" in window,
+    );
+  }, []);
 
   const startListening = useCallback(() => {
     if (!supported || listening) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognition = (window as any).webkitSpeechRecognition as new () => SpeechRecognitionInstance;
-    const recognition = new SpeechRecognition();
+    const SpeechRecognitionClass =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) return;
+
+    const recognition = new SpeechRecognitionClass() as SpeechRecognitionInstance;
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    recognition.continuous = false;
 
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
@@ -29,7 +41,7 @@ export function MicButton({ onTranscript, className }: MicButtonProps) {
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0]?.[0]?.transcript ?? "";
       if (transcript && onTranscript) {
-        onTranscript(transcript);
+        onTranscript(transcript.trim());
       }
     };
 
@@ -52,10 +64,7 @@ export function MicButton({ onTranscript, className }: MicButtonProps) {
       aria-label={listening ? "Listening…" : "Tell me about your dream trip — voice input"}
     >
       <span
-        className={cn(
-          "material-symbols-outlined",
-          listening && "text-primary",
-        )}
+        className={cn("material-symbols-outlined", listening && "text-primary")}
         style={{
           fontSize: "28px",
           fontVariationSettings: listening ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 400",
@@ -71,11 +80,11 @@ export function MicButton({ onTranscript, className }: MicButtonProps) {
   );
 }
 
-// Minimal type declarations for Web Speech API
 interface SpeechRecognitionInstance {
   lang: string;
   interimResults: boolean;
   maxAlternatives: number;
+  continuous: boolean;
   onstart: (() => void) | null;
   onend: (() => void) | null;
   onerror: (() => void) | null;
@@ -84,17 +93,5 @@ interface SpeechRecognitionInstance {
 }
 
 interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionResultList {
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
+  results: { [index: number]: { [index: number]: { transcript: string } } };
 }
