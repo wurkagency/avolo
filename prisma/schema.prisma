@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Currency {
+  EUR
+  USD
+  GBP
+  DKK
+  SEK
+  NOK
+}
+
+enum Language {
+  EN
+  DE
+  DA
+  SV
+  NO
+}
+
+enum TripStatus {
+  DRAFT
+  SEARCHING
+  COMPLETE
+  STALE
+}
+
+enum Flexibility {
+  EXACT
+  PLUS_MINUS_1
+  PLUS_MINUS_3
+  PLUS_MINUS_7
+}
+
+enum ServiceType {
+  FLIGHT
+  HOTEL
+  CAR
+  EXCURSION
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ── Auth Models (NextAuth v5 Prisma Adapter) ──────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  role          Role      @default(USER)
+  currency      Currency  @default(EUR)
+  language      Language  @default(EN)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  trips         Trip[]
+  preferences   Preferences?
+  notifications NotificationSettings?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ── Anonymous Session ─────────────────────────────────────────────────────────
+
+model AnonymousSession {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  trips     Trip[]
+
+  @@map("anonymous_sessions")
+}
+
+// ── Trip ──────────────────────────────────────────────────────────────────────
+
+model Trip {
+  id                 String      @id @default(cuid())
+  userId             String?
+  anonymousSessionId String?
+  departure          String
+  destination        String
+  departureName      String
+  destinationName    String
+  departureDate      DateTime
+  returnDate         DateTime?
+  isOneWay           Boolean     @default(false)
+  flexibility        Flexibility @default(EXACT)
+  adults             Int         @default(1)
+  children           Json
+  hasDisability      Boolean     @default(false)
+  handLuggage        Int         @default(1)
+  checkedLuggage     Int         @default(0)
+  specialLuggage     Boolean     @default(false)
+  totalPriceEur      Float?
+  status             TripStatus  @default(DRAFT)
+  lastRefreshedAt    DateTime?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  user             User?             @relation(fields: [userId], references: [id])
+  anonymousSession AnonymousSession? @relation(fields: [anonymousSessionId], references: [id])
+  services         TripService[]
+  results          CachedResult[]
+  searches         Search[]
+
+  @@index([userId])
+  @@index([anonymousSessionId])
+  @@map("trips")
+}
+
+model TripService {
+  id     String      @id @default(cuid())
+  tripId String
+  type   ServiceType
+  trip   Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_services")
+}
+
+// ── Cached Results ────────────────────────────────────────────────────────────
+
+model CachedResult {
+  id             String      @id @default(cuid())
+  tripId         String
+  serviceType    ServiceType
+  provider       String
+  rawData        Json
+  normalizedData Json
+  priceEur       Float
+  rank           Int
+  riskLevel      RiskLevel
+  riskReasons    Json
+  isRefundable   Boolean     @default(true)
+  deepLinkUrl    String      @db.Text
+  fetchedAt      DateTime    @default(now())
+  expiresAt      DateTime
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, serviceType])
+  @@map("cached_results")
+}
+
+// ── Search Log ────────────────────────────────────────────────────────────────
+
+model Search {
+  id         String   @id @default(cuid())
+  tripId     String
+  query      Json
+  providers  Json
+  durationMs Int
+  success    Boolean
+  errorLog   Json?
+  createdAt  DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("searches")
+}
+
+// ── Preferences ───────────────────────────────────────────────────────────────
+
+model Preferences {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  preferredAirports Json
+  maxStops          Int    @default(2)
+  travelType        String @default("any")
+  cabin             String @default("economy")
+  preferredAirlines Json
+  flightStyle       String @default("cheapest")
+
+  hotelType     String @default("any")
+  hotelLocation String @default("any")
+
+  carType       String @default("economy")
+  carInsurance  String @default("basic")
+  carPickupType String @default("any")
+
+  excursionStyle  Json
+  excursionBudget String @default("medium")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("preferences")
+}
+
+model NotificationSettings {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  priceDropAlerts Boolean @default(true)
+  tripUpdates     Boolean @default(true)
+  systemEmails    Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+// ── Airport ───────────────────────────────────────────────────────────────────
+
+model Airport {
+  id               Int     @id
+  ident            String  @unique
+  type             String
+  name             String
+  latitude         Float
+  longitude        Float
+  country          String
+  region           String
+  municipality     String?
+  iataCode         String?
+  scheduledService Boolean @default(false)
+
+  @@index([iataCode])
+  @@index([municipality])
+  @@map("airports")
+}
+
+// ── Journal ───────────────────────────────────────────────────────────────────
+
+model JournalArticle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  destination String
+  iataCode    String
+  title       String
+  body        String   @db.LongText
+  aiModel     String
+  generatedAt DateTime @default(now())
+  publishedAt DateTime?
+
+  @@index([iataCode])
+  @@map("journal_articles")
+}
