@@ -25,7 +25,7 @@ export function ResultsGrid({ results, categoryErrors, tripId, requestedServices
   return (
     <div className="flex gap-8 items-start">
       {allResults.length > 0 && (
-        <div className="hidden lg:block w-64 shrink-0 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl">
+        <div className="hidden lg:block w-64 shrink-0">
           <FilterSidebar results={allResults} filters={filters} onChange={setFilters} />
         </div>
       )}
