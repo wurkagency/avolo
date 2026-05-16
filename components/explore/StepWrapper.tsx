@@ -39,7 +39,7 @@ export function StepWrapper({
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Progress bar */}
-      <div className="h-1 bg-surface-container w-full" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps}>
+      <div className="h-1 bg-surface w-full" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps}>
         <div
           className="h-full bg-primary transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -52,14 +52,14 @@ export function StepWrapper({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            className="flex items-center gap-1 text-steel hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             aria-label="Go back"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back</span>
           </button>
         )}
         <span
-          className="text-on-surface-variant ml-auto"
+          className="text-steel ml-auto"
           style={{ fontFamily: "var(--font-inter)", fontSize: "13px", fontWeight: 500 }}
         >
           {step} / {totalSteps}
@@ -72,9 +72,9 @@ export function StepWrapper({
           {/* Heading */}
           <div className="flex flex-col gap-2">
             <h1
-              className="text-on-surface"
+              className="text-ink"
               style={{
-                fontFamily: "var(--font-manrope)",
+                fontFamily: "var(--font-editorial)",
                 fontSize: "clamp(28px, 5vw, 40px)",
                 fontWeight: 800,
                 lineHeight: 1.1,
@@ -85,7 +85,7 @@ export function StepWrapper({
             </h1>
             {subtitle && (
               <p
-                className="text-on-surface-variant"
+                className="text-steel"
                 style={{ fontFamily: "var(--font-inter)", fontSize: "16px", lineHeight: "1.5" }}
               >
                 {subtitle}
@@ -104,10 +104,10 @@ export function StepWrapper({
                 onClick={onSubmit}
                 disabled={submitDisabled}
                 className={cn(
-                  "w-full py-4 rounded-2xl text-center transition-all",
+                  "w-full py-4 rounded-lg text-center transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   submitDisabled
-                    ? "bg-surface-container text-on-surface-variant cursor-not-allowed opacity-50"
+                    ? "bg-surface text-steel cursor-not-allowed opacity-50"
                     : "bg-primary text-on-primary hover:opacity-90 cursor-pointer",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "17px", fontWeight: 700 }}
@@ -120,10 +120,10 @@ export function StepWrapper({
                 onClick={onNext}
                 disabled={nextDisabled}
                 className={cn(
-                  "w-full py-4 rounded-2xl text-center transition-all",
+                  "w-full py-4 rounded-lg text-center transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   nextDisabled
-                    ? "bg-surface-container text-on-surface-variant cursor-not-allowed opacity-50"
+                    ? "bg-surface text-steel cursor-not-allowed opacity-50"
                     : "bg-primary text-on-primary hover:opacity-90 cursor-pointer",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "17px", fontWeight: 700 }}

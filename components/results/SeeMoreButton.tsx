@@ -32,7 +32,7 @@ export function SeeMoreButton({ serviceType, tripId, total, shown }: SeeMoreButt
   return (
     <Link
       href={`${PATHS[serviceType]}?tripId=${encodeURIComponent(tripId)}`}
-      className="flex items-center justify-center gap-2 rounded-2xl border border-outline-variant bg-surface px-6 py-3 text-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
+      className="flex items-center justify-center gap-2 rounded-lg border border-hairline bg-surface px-6 py-3 text-sm font-medium text-ink hover:bg-surface transition-colors"
     >
       {LABELS[serviceType]}
       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">

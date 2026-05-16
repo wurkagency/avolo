@@ -17,16 +17,16 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1
-            className="text-2xl font-bold text-on-surface"
-            style={{ fontFamily: "var(--font-manrope)" }}
+            className="text-2xl font-bold text-ink"
+            style={{ fontFamily: "var(--font-editorial)" }}
           >
             Admin
           </h1>
-          <p className="text-sm text-on-surface-variant mt-0.5">Platform metrics and management</p>
+          <p className="text-sm text-steel mt-0.5">Platform metrics and management</p>
         </div>
         <Link
           href="/"
-          className="text-xs font-medium text-on-surface-variant hover:text-on-surface transition-colors uppercase tracking-wide"
+          className="text-xs font-medium text-steel hover:text-ink transition-colors uppercase tracking-wide"
         >
           ← Back to app
         </Link>

@@ -30,7 +30,7 @@ export function AddToTripButton({ tripId, resultId, type, priceEur, summary }: A
       type="button"
       onClick={toggle}
       className={cn(
-        "rounded-full px-4 py-2 text-sm font-semibold transition-all flex items-center gap-1.5 shrink-0",
+        "rounded-md px-4 py-2 text-sm font-semibold transition-all flex items-center gap-1.5 shrink-0",
         selected
           ? "bg-primary/10 text-primary border border-primary"
           : "bg-primary text-white hover:bg-primary/90",

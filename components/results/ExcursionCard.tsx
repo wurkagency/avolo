@@ -35,11 +35,11 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
   const summary = `${e.title} · ${e.durationHours}h · ${e.category}`;
 
   return (
-    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex min-h-[120px]">
+    <article className="bg-canvas border border-hairline rounded-lg overflow-hidden flex min-h-[120px]">
       {/* Image */}
       <Link
         href={`/results/excursions/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}
-        className="w-40 shrink-0 bg-surface-container overflow-hidden"
+        className="w-40 shrink-0 bg-surface overflow-hidden"
         tabIndex={-1}
       >
         {photoUrl ? (
@@ -47,7 +47,7 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
           <img src={photoUrl} alt={e.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">hiking</span>
+            <span className="material-symbols-outlined text-3xl text-steel/40">hiking</span>
           </div>
         )}
       </Link>
@@ -57,9 +57,9 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <Link href={`/results/excursions/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}>
-              <p className="font-semibold text-on-surface text-sm hover:text-primary transition-colors truncate">{e.title}</p>
+              <p className="font-semibold text-ink text-sm hover:text-primary transition-colors truncate">{e.title}</p>
             </Link>
-            <p className="text-xs text-on-surface-variant mt-0.5 capitalize">{e.category} · {e.durationHours}h · {e.location}</p>
+            <p className="text-xs text-steel mt-0.5 capitalize">{e.category} · {e.durationHours}h · {e.location}</p>
           </div>
           <div className="flex flex-wrap gap-1.5 shrink-0">
             {result.aiSlot && <SlotBadge slot={result.aiSlot} isPrimary={result.rank === 0} />}
@@ -67,27 +67,27 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
           </div>
         </div>
 
-        <p className="text-xs text-on-surface-variant line-clamp-2">{e.description}</p>
+        <p className="text-xs text-steel line-clamp-2">{e.description}</p>
 
         {e.includes.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {e.includes.slice(0, 3).map((item) => (
-              <span key={item} className="rounded-full bg-surface-container px-2 py-0.5 text-xs text-on-surface-variant">
+              <span key={item} className="rounded-full bg-surface px-2 py-0.5 text-xs text-steel">
                 {item}
               </span>
             ))}
           </div>
         )}
 
-        <div className="text-xs text-on-surface-variant">
+        <div className="text-xs text-steel">
           {formatDate(e.date)}{e.groupSize && ` · ${e.groupSize}`}
         </div>
 
         {result.aiSummary && (
-          <p className="text-xs text-on-surface-variant">{result.aiSummary}</p>
+          <p className="text-xs text-steel">{result.aiSummary}</p>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-outline-variant pt-2 mt-auto flex-wrap">
+        <div className="flex items-center justify-between gap-3 border-t border-hairline pt-2 mt-auto flex-wrap">
           <p className="text-xl font-bold text-primary">{format(result.priceEur)}</p>
           <AddToTripButton tripId={tripId} resultId={result.id} type="EXCURSION" priceEur={result.priceEur} summary={summary} />
         </div>

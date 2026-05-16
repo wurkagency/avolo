@@ -13,7 +13,7 @@ export function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 mb-8 border-b border-outline-variant">
+    <nav className="flex gap-1 mb-8 border-b border-hairline">
       {NAV.map(({ href, label }) => {
         const active = pathname === href || pathname.startsWith(href + "/");
         return (
@@ -23,7 +23,7 @@ export function AdminNav() {
             className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
               active
                 ? "border-primary text-primary"
-                : "border-transparent text-on-surface-variant hover:text-on-surface hover:border-outline"
+                : "border-transparent text-steel hover:text-ink hover:border-hairline-strong"
             }`}
           >
             {label}

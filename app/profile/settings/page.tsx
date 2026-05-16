@@ -143,15 +143,15 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-bold text-on-surface" style={{ fontFamily: "var(--font-manrope)" }}>
+        <h1 className="text-2xl font-bold text-ink" style={{ fontFamily: "var(--font-editorial)" }}>
           Account settings
         </h1>
-        <p className="text-sm text-on-surface-variant mt-1">{session?.user?.email}</p>
+        <p className="text-sm text-steel mt-1">{session?.user?.email}</p>
       </div>
 
       {/* Name */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Display name</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Display name</h2>
         <div className="flex gap-3">
           <input
             type="text"
@@ -160,7 +160,7 @@ export default function SettingsPage() {
             onKeyDown={(e) => e.key === "Enter" && void saveName()}
             maxLength={100}
             placeholder="Your name"
-            className="flex-1 rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-steel focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <button
             onClick={saveName}
@@ -173,19 +173,19 @@ export default function SettingsPage() {
       </section>
 
       {/* Currency & Language */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Display preferences</h2>
-        <p className="text-sm text-on-surface-variant -mt-1">Changes apply immediately across all prices.</p>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Display preferences</h2>
+        <p className="text-sm text-steel -mt-1">Changes apply immediately across all prices.</p>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
+            <label className="text-xs font-medium text-steel uppercase tracking-wide">
               Currency
             </label>
             <select
               value={currency}
               onChange={(e) => void handleCurrencyChange(e.target.value as Currency)}
-              className="rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className="rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {CURRENCIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
@@ -194,13 +194,13 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
+            <label className="text-xs font-medium text-steel uppercase tracking-wide">
               Language
             </label>
             <select
               value={language}
               onChange={(e) => void handleLanguageChange(e.target.value as Language)}
-              className="rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className="rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {LANGUAGES.map((l) => (
                 <option key={l.value} value={l.value}>{l.label}</option>
@@ -211,14 +211,14 @@ export default function SettingsPage() {
       </section>
 
       {/* GDPR */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Your data</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Your data</h2>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 rounded-xl border border-outline-variant px-5 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-hairline px-5 py-2.5 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">download</span>
             {exporting ? "Exporting…" : "Export my data"}
@@ -233,18 +233,18 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        <p className="text-xs text-on-surface-variant">
+        <p className="text-xs text-steel">
           Exporting gives you a JSON file with all your data. Deleting is permanent and cannot be undone.
         </p>
       </section>
 
       {/* Delete confirmation modal */}
       <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete account?">
-        <p className="text-sm text-on-surface-variant mb-4">
+        <p className="text-sm text-steel mb-4">
           This permanently deletes your account and all associated data — trips, preferences, and search history.
           <strong className="text-red-600"> This cannot be undone.</strong>
         </p>
-        <p className="text-sm text-on-surface mb-3">
+        <p className="text-sm text-ink mb-3">
           Type your email address to confirm: <strong>{session?.user?.email}</strong>
         </p>
         <input
@@ -253,12 +253,12 @@ export default function SettingsPage() {
           onChange={(e) => setDeleteEmail(e.target.value)}
           placeholder="your@email.com"
           autoComplete="off"
-          className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-sm text-on-surface mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
         />
         <div className="flex gap-3 justify-end">
           <button
             onClick={() => setShowDeleteModal(false)}
-            className="rounded-full border border-outline-variant px-5 py-2 text-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
+            className="rounded-md border border-hairline px-5 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors"
           >
             Cancel
           </button>

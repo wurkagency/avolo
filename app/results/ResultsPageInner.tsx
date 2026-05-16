@@ -100,7 +100,7 @@ export function ResultsPageInner() {
   if (tripLoading || isPolling) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-12">
-        <div className="flex items-center gap-3 text-on-surface-variant">
+        <div className="flex items-center gap-3 text-steel">
           <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>{isPolling ? "Search in progress…" : "Loading…"}</span>
         </div>
@@ -118,12 +118,12 @@ export function ResultsPageInner() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-on-surface">
+        <h1 className="text-3xl font-bold text-ink">
           {departureName && destinationName
             ? `${departureName} → ${destinationName}`
             : "Your trip results"}
         </h1>
-        <p className="text-on-surface-variant mt-1 text-sm">
+        <p className="text-steel mt-1 text-sm">
           {isDone
             ? `${Object.values(results).flat().length} results found`
             : "Searching across providers…"}

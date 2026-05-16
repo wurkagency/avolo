@@ -46,11 +46,11 @@ function Select({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">{label}</label>
+      <label className="text-xs font-medium text-steel uppercase tracking-wide">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-xl border border-outline-variant bg-surface px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+        className="rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
       >
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -113,7 +113,7 @@ export default function PreferencesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 py-12 text-on-surface-variant">
+      <div className="flex items-center gap-3 py-12 text-steel">
         <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <span>Loading preferences…</span>
       </div>
@@ -124,22 +124,22 @@ export default function PreferencesPage() {
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface" style={{ fontFamily: "var(--font-manrope)" }}>
+          <h1 className="text-2xl font-bold text-ink" style={{ fontFamily: "var(--font-editorial)" }}>
             Travel preferences
           </h1>
-          <p className="text-sm text-on-surface-variant mt-1">Changes are saved automatically.</p>
+          <p className="text-sm text-steel mt-1">Changes are saved automatically.</p>
         </div>
 
         {saveStatus !== "idle" && (
-          <span className={`text-sm font-medium ${saveStatus === "saved" ? "text-green-600" : "text-on-surface-variant"}`}>
+          <span className={`text-sm font-medium ${saveStatus === "saved" ? "text-green-600" : "text-steel"}`}>
             {saveStatus === "saving" ? "Saving…" : "Saved"}
           </span>
         )}
       </div>
 
       {/* Flights */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Flights</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Flights</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
             label="Max stops"
@@ -186,8 +186,8 @@ export default function PreferencesPage() {
       </section>
 
       {/* Hotels */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Hotels</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Hotels</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
             label="Hotel type"
@@ -215,8 +215,8 @@ export default function PreferencesPage() {
       </section>
 
       {/* Cars */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Car rentals</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Car rentals</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
             label="Car type"
@@ -253,8 +253,8 @@ export default function PreferencesPage() {
       </section>
 
       {/* Excursions */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-outline-variant p-6">
-        <h2 className="text-base font-semibold text-on-surface">Excursions</h2>
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Excursions</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
             label="Budget sensitivity"
@@ -267,7 +267,7 @@ export default function PreferencesPage() {
             onChange={(v) => update("excursionBudget", v)}
           />
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
+            <p className="text-xs font-medium text-steel uppercase tracking-wide">
               Experience styles
             </p>
             <div className="flex flex-wrap gap-2">
@@ -282,10 +282,10 @@ export default function PreferencesPage() {
                         : [...prefs.excursionStyle, style];
                       update("excursionStyle", next);
                     }}
-                    className={`rounded-full px-3 py-1 text-xs font-medium border capitalize transition-colors ${
+                    className={`rounded-md px-3 py-1 text-xs font-medium border capitalize transition-colors ${
                       active
                         ? "bg-primary text-white border-primary"
-                        : "border-outline-variant text-on-surface hover:bg-surface-container"
+                        : "border-hairline text-ink hover:bg-surface"
                     }`}
                   >
                     {style}

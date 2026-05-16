@@ -29,9 +29,9 @@ function BagCounter({
   onChange: (n: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-4 border-b border-outline-variant last:border-0">
+    <div className="flex items-center justify-between gap-4 py-4 border-b border-hairline last:border-0">
       <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-[24px] text-on-surface-variant" aria-hidden="true">
+        <span className="material-symbols-outlined text-[24px] text-steel" aria-hidden="true">
           {icon}
         </span>
         <div className="flex flex-col gap-0.5">
@@ -39,7 +39,7 @@ function BagCounter({
             {label}
           </span>
           <span
-            className="text-on-surface-variant"
+            className="text-steel"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
           >
             {sub}
@@ -57,7 +57,7 @@ function BagCounter({
             "w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             value <= min
-              ? "border-outline-variant text-on-surface-variant opacity-40 cursor-not-allowed"
+              ? "border-hairline text-steel opacity-40 cursor-not-allowed"
               : "border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer",
           )}
         >
@@ -79,7 +79,7 @@ function BagCounter({
             "w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             value >= max
-              ? "border-outline-variant text-on-surface-variant opacity-40 cursor-not-allowed"
+              ? "border-hairline text-steel opacity-40 cursor-not-allowed"
               : "border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer",
           )}
         >
@@ -99,7 +99,7 @@ export function LuggageSelector({
   onChangeSpecial,
 }: LuggageSelectorProps) {
   return (
-    <div className="flex flex-col gap-0 bg-surface-container-low border border-outline-variant rounded-2xl px-5">
+    <div className="flex flex-col gap-0 bg-canvas border border-hairline rounded-lg px-5">
       <BagCounter
         label="Hand luggage"
         sub="Fits in overhead bin"
@@ -122,7 +122,7 @@ export function LuggageSelector({
       {/* Special luggage toggle */}
       <div className="flex items-center justify-between gap-4 py-4">
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-[24px] text-on-surface-variant" aria-hidden="true">
+          <span className="material-symbols-outlined text-[24px] text-steel" aria-hidden="true">
             sports_tennis
           </span>
           <div className="flex flex-col gap-0.5">
@@ -130,7 +130,7 @@ export function LuggageSelector({
               Special luggage
             </span>
             <span
-              className="text-on-surface-variant"
+              className="text-steel"
               style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
             >
               Bike, surfboard, golf clubs…
@@ -145,7 +145,7 @@ export function LuggageSelector({
           className={cn(
             "relative inline-flex h-7 w-12 shrink-0 rounded-full border-2 transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer",
-            specialLuggage ? "bg-primary border-primary" : "bg-surface-container border-outline-variant",
+            specialLuggage ? "bg-primary border-primary" : "bg-surface border-hairline",
           )}
           aria-label="Toggle special luggage"
         >

@@ -12,10 +12,10 @@ export async function ArticleCard({ article }: Props) {
   return (
     <Link
       href={`/journal/${article.slug}`}
-      className="group flex flex-col rounded-2xl border border-outline-variant bg-surface overflow-hidden hover:border-primary/40 hover:shadow-sm transition-all"
+      className="group flex flex-col rounded-lg border border-hairline bg-surface overflow-hidden hover:border-primary/40 hover:shadow-sm transition-all"
     >
       {/* Hero image */}
-      <div className="h-40 bg-surface-container overflow-hidden">
+      <div className="h-40 bg-surface overflow-hidden">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -25,7 +25,7 @@ export async function ArticleCard({ article }: Props) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">travel_explore</span>
+            <span className="material-symbols-outlined text-4xl text-steel/30">travel_explore</span>
           </div>
         )}
       </div>
@@ -39,16 +39,16 @@ export async function ArticleCard({ article }: Props) {
 
         <div>
           <h2
-            className="text-base font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-2"
-            style={{ fontFamily: "var(--font-manrope)" }}
+            className="text-base font-semibold text-ink group-hover:text-primary transition-colors line-clamp-2"
+            style={{ fontFamily: "var(--font-editorial)" }}
           >
             {article.title}
           </h2>
-          <p className="text-sm text-on-surface-variant mt-1">{article.destination}</p>
+          <p className="text-sm text-steel mt-1">{article.destination}</p>
         </div>
 
         <div className="mt-auto flex items-center justify-between">
-          <span className="text-xs text-on-surface-variant">
+          <span className="text-xs text-steel">
             {new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(new Date(article.generatedAt))}
           </span>
           <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">

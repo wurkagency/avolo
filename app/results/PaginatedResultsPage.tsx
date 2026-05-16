@@ -72,14 +72,14 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
       <div className="mb-8 flex items-center gap-3">
         <Link
           href={`/results?tripId=${encodeURIComponent(tripId)}`}
-          className="rounded-full p-2 hover:bg-surface-container transition-colors"
+          className="rounded-full p-2 hover:bg-surface transition-colors"
           aria-label="Back to results"
         >
-          <span className="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+          <span className="material-symbols-outlined text-steel">arrow_back</span>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">{title}</h1>
-          <p className="text-sm text-on-surface-variant">{total} results</p>
+          <h1 className="text-2xl font-bold text-ink">{title}</h1>
+          <p className="text-sm text-steel">{total} results</p>
         </div>
       </div>
 
@@ -90,14 +90,14 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
 
         <div className="flex-1 min-w-0">
           {loading ? (
-            <div className="flex items-center gap-3 text-on-surface-variant py-12 justify-center">
+            <div className="flex items-center gap-3 text-steel py-12 justify-center">
               <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span>Loading…</span>
             </div>
           ) : error ? (
             <p className="text-red-600 bg-red-50 rounded-xl px-5 py-4">{error}</p>
           ) : filtered.length === 0 ? (
-            <p className="text-on-surface-variant text-center py-12">No results match your filters.</p>
+            <p className="text-steel text-center py-12">No results match your filters.</p>
           ) : (
             <>
               <div className="flex flex-col gap-3">
@@ -109,15 +109,15 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    className="rounded-full px-4 py-2 text-sm font-medium border border-outline-variant disabled:opacity-40 hover:bg-surface-container transition-colors"
+                    className="rounded-full px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-on-surface-variant">Page {page} of {totalPages}</span>
+                  <span className="text-sm text-steel">Page {page} of {totalPages}</span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
-                    className="rounded-full px-4 py-2 text-sm font-medium border border-outline-variant disabled:opacity-40 hover:bg-surface-container transition-colors"
+                    className="rounded-full px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
                   >
                     Next
                   </button>

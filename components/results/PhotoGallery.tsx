@@ -19,7 +19,7 @@ export function PhotoGallery({ photos, alt }: PhotoGalleryProps) {
             key={url}
             type="button"
             onClick={() => setLightbox(i)}
-            className="aspect-[4/3] overflow-hidden rounded-xl bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="aspect-[4/3] overflow-hidden rounded-xl bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -61,7 +61,7 @@ export function PhotoGallery({ photos, alt }: PhotoGalleryProps) {
           <img
             src={photos[lightbox]}
             alt={`${alt} — photo ${lightbox + 1}`}
-            className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain"
+            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
 

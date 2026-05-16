@@ -21,11 +21,11 @@ export function CarCard({ result, tripId }: CarCardProps) {
   const summary = `${c.make} ${c.model} · ${c.category} · ${c.supplier}`;
 
   return (
-    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex min-h-[120px]">
+    <article className="bg-canvas border border-hairline rounded-lg overflow-hidden flex min-h-[120px]">
       {/* Image */}
       <Link
         href={`/results/cars/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}
-        className="w-40 shrink-0 bg-surface-container overflow-hidden"
+        className="w-40 shrink-0 bg-surface overflow-hidden"
         tabIndex={-1}
       >
         {c.imageUrl ? (
@@ -33,7 +33,7 @@ export function CarCard({ result, tripId }: CarCardProps) {
           <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">directions_car</span>
+            <span className="material-symbols-outlined text-3xl text-steel/40">directions_car</span>
           </div>
         )}
       </Link>
@@ -43,9 +43,9 @@ export function CarCard({ result, tripId }: CarCardProps) {
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <Link href={`/results/cars/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}>
-              <p className="font-semibold text-on-surface text-sm hover:text-primary transition-colors">{c.make} {c.model}</p>
+              <p className="font-semibold text-ink text-sm hover:text-primary transition-colors">{c.make} {c.model}</p>
             </Link>
-            <p className="text-xs text-on-surface-variant mt-0.5 capitalize">{c.category} · {c.seats} seats · {c.supplier}</p>
+            <p className="text-xs text-steel mt-0.5 capitalize">{c.category} · {c.seats} seats · {c.supplier}</p>
           </div>
           <div className="flex flex-wrap gap-1.5 shrink-0">
             {result.aiSlot && <SlotBadge slot={result.aiSlot} isPrimary={result.rank === 0} />}
@@ -53,24 +53,24 @@ export function CarCard({ result, tripId }: CarCardProps) {
           </div>
         </div>
 
-        <div className="flex items-start gap-2 text-xs text-on-surface-variant">
+        <div className="flex items-start gap-2 text-xs text-steel">
           <span className="material-symbols-outlined text-sm">location_on</span>
           <div>
-            <p className="text-on-surface font-medium">{c.pickupLocation}</p>
+            <p className="text-ink font-medium">{c.pickupLocation}</p>
             <p>{formatDate(c.pickupDate)} → {formatDate(c.dropoffDate)}</p>
           </div>
         </div>
 
-        <p className="text-xs text-on-surface-variant">{c.days} day{c.days !== 1 ? "s" : ""} · {c.insurance} insurance</p>
+        <p className="text-xs text-steel">{c.days} day{c.days !== 1 ? "s" : ""} · {c.insurance} insurance</p>
 
         {result.aiSummary && (
-          <p className="text-xs text-on-surface-variant">{result.aiSummary}</p>
+          <p className="text-xs text-steel">{result.aiSummary}</p>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-outline-variant pt-2 mt-auto flex-wrap">
+        <div className="flex items-center justify-between gap-3 border-t border-hairline pt-2 mt-auto flex-wrap">
           <div>
             <p className="text-xl font-bold text-primary">{format(result.priceEur)}</p>
-            <p className="text-xs text-on-surface-variant">total {c.days} day{c.days !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-steel">total {c.days} day{c.days !== 1 ? "s" : ""}</p>
           </div>
           <AddToTripButton tripId={tripId} resultId={result.id} type="CAR" priceEur={result.priceEur} summary={summary} />
         </div>

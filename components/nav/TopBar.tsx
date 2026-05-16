@@ -16,7 +16,7 @@ export function TopBar() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-background border-b border-outline-variant">
+    <header className="fixed top-0 w-full z-50 bg-surface border-b border-hairline">
       <div className="flex items-center justify-between px-gutter py-4 max-w-container-max mx-auto">
         {/* Logo */}
         <Link
@@ -33,7 +33,7 @@ export function TopBar() {
           </span>
           <span
             className="text-primary font-bold tracking-tight leading-none"
-            style={{ fontFamily: "var(--font-manrope)", fontSize: "20px" }}
+            style={{ fontFamily: "var(--font-editorial)", fontSize: "20px" }}
           >
             avolo
           </span>
@@ -49,7 +49,7 @@ export function TopBar() {
                 href={href}
                 className={cn(
                   "transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
-                  active ? "text-primary" : "text-on-surface-variant",
+                  active ? "text-primary" : "text-steel",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}
                 aria-current={active ? "page" : undefined}
@@ -66,7 +66,7 @@ export function TopBar() {
                 href="/profile/settings"
                 className={cn(
                   "transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
-                  pathname.startsWith("/profile") ? "text-primary" : "text-on-surface-variant",
+                  pathname.startsWith("/profile") ? "text-primary" : "text-steel",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}
               >
@@ -74,7 +74,7 @@ export function TopBar() {
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                className="text-steel hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                 style={{ fontFamily: "var(--font-inter)", fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}
               >
                 Sign out
@@ -83,7 +83,7 @@ export function TopBar() {
           ) : (
             <Link
               href="/login"
-              className="text-on-surface-variant hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+              className="text-steel hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
               style={{ fontFamily: "var(--font-inter)", fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}
             >
               Sign in
@@ -93,7 +93,7 @@ export function TopBar() {
 
         {/* Mobile menu trigger */}
         <button
-          className="md:hidden text-on-surface-variant hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded p-1"
+          className="md:hidden text-steel hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded p-1"
           aria-label="Open menu"
           data-mobile-menu-trigger
         >

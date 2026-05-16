@@ -1,23 +1,31 @@
 import type { Metadata } from "next";
-import { Manrope, Inter } from "next/font/google";
+import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { TopBar } from "@/components/nav/TopBar";
 import { MobileMenu } from "@/components/nav/MobileMenu";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
+import { SunsetStripeBand } from "@/components/ui/SunsetStripeBand";
 
-const manrope = Manrope({
+const editorial = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
-  variable: "--font-manrope",
+  variable: "--font-editorial",
   display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "600"],
+  weight: ["400", "500", "600"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -44,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${inter.variable}`}
+      className={`${editorial.variable} ${inter.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -54,12 +62,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
       </head>
-      <body className="text-on-background bg-background min-h-dvh flex flex-col" style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>
+      <body className="text-ink bg-surface min-h-dvh flex flex-col" style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>
         <NextAuthProvider>
           <QueryProvider>
             <TopBar />
             <MobileMenu />
             <main className="flex-1 pt-[72px]">{children}</main>
+            <SunsetStripeBand />
             <ToastProvider />
           </QueryProvider>
         </NextAuthProvider>

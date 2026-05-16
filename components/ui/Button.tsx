@@ -16,17 +16,17 @@ const variantClasses: Record<Variant, string> = {
   primary:
     "bg-primary text-on-primary hover:opacity-90 shadow-sm active:scale-95",
   secondary:
-    "bg-secondary-container text-on-secondary-container hover:opacity-90 active:scale-95",
+    "bg-cream-light text-ink-tint hover:opacity-90 active:scale-95",
   ghost:
-    "bg-transparent text-on-surface-variant hover:bg-surface-container active:scale-95",
+    "bg-transparent text-steel hover:bg-surface active:scale-95",
   destructive:
     "bg-error text-on-error hover:opacity-90 active:scale-95",
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: "px-4 py-2 text-label-caps rounded-full",
-  md: "px-6 py-3 text-label-caps rounded-full",
-  lg: "px-8 py-4 text-label-caps rounded-full",
+  sm: "px-4 py-2 text-sm rounded-md",
+  md: "px-6 py-3 text-sm rounded-md",
+  lg: "px-8 py-4 text-base rounded-md",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -36,7 +36,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled ?? loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-label-caps transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
+          "inline-flex items-center justify-center gap-2  transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
           variantClasses[variant],
           sizeClasses[size],
           className,

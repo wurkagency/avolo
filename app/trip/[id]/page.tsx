@@ -41,7 +41,7 @@ export default async function TripDetailPage({ params }: PageProps) {
       <div className="mb-6">
         <Link
           href="/trips"
-          className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-on-surface transition-colors"
+          className="flex items-center gap-1 text-sm text-steel hover:text-ink transition-colors"
         >
           <span className="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
           My Trips
@@ -52,12 +52,12 @@ export default async function TripDetailPage({ params }: PageProps) {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1
-            className="text-3xl font-bold text-on-surface"
-            style={{ fontFamily: "var(--font-manrope)" }}
+            className="text-3xl font-bold text-ink"
+            style={{ fontFamily: "var(--font-editorial)" }}
           >
             {trip.departureName} → {trip.destinationName}
           </h1>
-          <p className="text-on-surface-variant mt-1 text-sm">
+          <p className="text-steel mt-1 text-sm">
             {formatDate(trip.departureDate.toISOString())}
             {trip.returnDate
               ? ` – ${formatDate(trip.returnDate.toISOString())}`
@@ -69,12 +69,12 @@ export default async function TripDetailPage({ params }: PageProps) {
           {trip.totalPriceEur !== null && (
             <p className="mt-3">
               <span className="text-3xl font-bold text-primary">{formatEur(trip.totalPriceEur)}</span>
-              <span className="text-sm text-on-surface-variant ml-2">estimated total from search</span>
+              <span className="text-sm text-steel ml-2">estimated total from search</span>
             </p>
           )}
 
           {trip.lastRefreshedAt && (
-            <p className="text-xs text-on-surface-variant mt-1">
+            <p className="text-xs text-steel mt-1">
               Last refreshed {formatRelativeTime(trip.lastRefreshedAt)}
             </p>
           )}
@@ -96,28 +96,28 @@ export default async function TripDetailPage({ params }: PageProps) {
       {(trip.status === "COMPLETE" || trip.status === "STALE") && (
         <Link
           href={`/results?tripId=${encodeURIComponent(params.id)}`}
-          className="flex items-center justify-between gap-4 rounded-2xl border border-outline-variant bg-surface p-4 mb-6 hover:border-primary/40 hover:shadow-sm transition-all group"
+          className="flex items-center justify-between gap-4 rounded-lg border border-hairline bg-surface p-4 mb-6 hover:border-primary/40 hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary" aria-hidden="true"
               style={{ fontVariationSettings: "'FILL' 1, 'wght' 400" }}>search</span>
             <div>
-              <p className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+              <p className="text-sm font-semibold text-ink group-hover:text-primary transition-colors">
                 View all search results
               </p>
-              <p className="text-xs text-on-surface-variant mt-0.5">
+              <p className="text-xs text-steel mt-0.5">
                 Browse and change your selected services
               </p>
             </div>
           </div>
-          <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors shrink-0">chevron_right</span>
+          <span className="material-symbols-outlined text-steel group-hover:text-primary transition-colors shrink-0">chevron_right</span>
         </Link>
       )}
 
       {/* Travel Journal CTA */}
       <Link
         href={`/journal/${toSlug(trip.destination, trip.destinationName)}?destination=${encodeURIComponent(trip.destinationName)}&iata=${encodeURIComponent(trip.destination)}`}
-        className="flex items-center justify-between gap-4 rounded-2xl border border-outline-variant bg-surface p-4 mb-8 hover:border-primary/40 hover:shadow-sm transition-all group"
+        className="flex items-center justify-between gap-4 rounded-lg border border-hairline bg-surface p-4 mb-8 hover:border-primary/40 hover:shadow-sm transition-all group"
       >
         <div className="flex items-center gap-3">
           <span
@@ -128,30 +128,30 @@ export default async function TripDetailPage({ params }: PageProps) {
             auto_stories
           </span>
           <div>
-            <p className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+            <p className="text-sm font-semibold text-ink group-hover:text-primary transition-colors">
               {trip.destinationName} Travel Guide
             </p>
-            <p className="text-xs text-on-surface-variant mt-0.5">
+            <p className="text-xs text-steel mt-0.5">
               AI-generated tips on transport, car rentals, local gems, and hidden fees.
             </p>
           </div>
         </div>
-        <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors shrink-0" aria-hidden="true">
+        <span className="material-symbols-outlined text-steel group-hover:text-primary transition-colors shrink-0" aria-hidden="true">
           chevron_right
         </span>
       </Link>
 
       {/* Selected services */}
       <div className="mb-2">
-        <h2 className="text-lg font-semibold text-on-surface mb-4"
-          style={{ fontFamily: "var(--font-manrope)" }}>
+        <h2 className="text-lg font-semibold text-ink mb-4"
+          style={{ fontFamily: "var(--font-editorial)" }}>
           My selected services
         </h2>
 
         {trip.status === "DRAFT" || trip.status === "SEARCHING" ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm text-on-surface-variant">Search in progress — come back once results are ready.</p>
+            <p className="text-sm text-steel">Search in progress — come back once results are ready.</p>
           </div>
         ) : (
           <SelectedServicesPanel tripId={params.id} requestedServices={orderedServices} />

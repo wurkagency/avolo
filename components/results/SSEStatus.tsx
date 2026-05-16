@@ -14,7 +14,7 @@ export function SSEStatus({ status, isDone, error }: SSEStatusProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-medium",
+        "flex items-center gap-3 rounded-lg px-5 py-4 text-sm font-medium",
         error
           ? "bg-red-50 text-red-700"
           : "bg-primary/5 text-primary",

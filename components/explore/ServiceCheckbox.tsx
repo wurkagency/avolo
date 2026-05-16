@@ -42,15 +42,15 @@ export function ServiceCheckbox({ selected, onChange }: ServiceCheckboxProps) {
             onClick={() => toggle(svc.value)}
             aria-pressed={active}
             className={cn(
-              "flex flex-col gap-2 p-5 rounded-2xl border-2 text-left transition-all",
+              "flex flex-col gap-2 p-5 rounded-lg border-2 text-left transition-all",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               active
-                ? "border-primary bg-secondary-container text-on-secondary-container"
-                : "border-outline-variant bg-surface-container hover:border-primary text-on-surface",
+                ? "border-primary bg-cream-light text-ink-tint"
+                : "border-hairline bg-surface hover:border-primary text-ink",
             )}
           >
             <span
-              className={cn("material-symbols-outlined text-[28px]", active ? "text-primary" : "text-on-surface-variant")}
+              className={cn("material-symbols-outlined text-[28px]", active ? "text-primary" : "text-steel")}
               style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
               aria-hidden="true"
             >
@@ -61,7 +61,7 @@ export function ServiceCheckbox({ selected, onChange }: ServiceCheckboxProps) {
                 {svc.label}
               </span>
               <span
-                className="text-on-surface-variant"
+                className="text-steel"
                 style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
               >
                 {svc.sub}

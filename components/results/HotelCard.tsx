@@ -38,11 +38,11 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
   const summary = `${h.name} · ${h.stars}★ · ${h.nights} night${h.nights !== 1 ? "s" : ""}`;
 
   return (
-    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex min-h-[120px]">
+    <article className="bg-canvas border border-hairline rounded-lg overflow-hidden flex min-h-[120px]">
       {/* Image */}
       <Link
         href={`/results/hotels/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}
-        className="w-40 shrink-0 bg-surface-container overflow-hidden"
+        className="w-40 shrink-0 bg-surface overflow-hidden"
         tabIndex={-1}
       >
         {photoUrl ? (
@@ -50,7 +50,7 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
           <img src={photoUrl} alt={h.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">hotel</span>
+            <span className="material-symbols-outlined text-3xl text-steel/40">hotel</span>
           </div>
         )}
       </Link>
@@ -60,9 +60,9 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <Link href={`/results/hotels/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}>
-              <p className="font-semibold text-on-surface text-sm hover:text-primary transition-colors truncate">{h.name}</p>
+              <p className="font-semibold text-ink text-sm hover:text-primary transition-colors truncate">{h.name}</p>
             </Link>
-            <p className="text-xs text-on-surface-variant mt-0.5">
+            <p className="text-xs text-steel mt-0.5">
               {"★".repeat(Math.min(5, h.stars))}
               {h.distanceFromCenterKm !== null && ` · ${h.distanceFromCenterKm.toFixed(1)} km centre`}
             </p>
@@ -77,29 +77,29 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
           <div className="flex items-center gap-2">
             <span className="rounded-lg bg-primary px-2 py-0.5 text-xs font-bold text-white">{h.rating.toFixed(1)}</span>
             {h.reviewCount !== null && (
-              <span className="text-xs text-on-surface-variant">{h.reviewCount.toLocaleString()} reviews</span>
+              <span className="text-xs text-steel">{h.reviewCount.toLocaleString()} reviews</span>
             )}
           </div>
         )}
 
-        <div className="text-xs text-on-surface-variant">
+        <div className="text-xs text-steel">
           {formatDate(h.checkIn)} → {formatDate(h.checkOut)} · {h.nights} night{h.nights !== 1 ? "s" : ""}
         </div>
 
-        <div className="text-xs text-on-surface-variant">
+        <div className="text-xs text-steel">
           {h.roomType}
           {h.breakfast ? " · Breakfast included" : ""}
           <span className="ml-1 opacity-70">{h.cancellationPolicy}</span>
         </div>
 
         {result.aiSummary && (
-          <p className="text-xs text-on-surface-variant">{result.aiSummary}</p>
+          <p className="text-xs text-steel">{result.aiSummary}</p>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-outline-variant pt-2 mt-auto flex-wrap">
+        <div className="flex items-center justify-between gap-3 border-t border-hairline pt-2 mt-auto flex-wrap">
           <div>
             <p className="text-xl font-bold text-primary">{format(result.priceEur)}</p>
-            <p className="text-xs text-on-surface-variant">total {h.nights} night{h.nights !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-steel">total {h.nights} night{h.nights !== 1 ? "s" : ""}</p>
           </div>
           <AddToTripButton tripId={tripId} resultId={result.id} type="HOTEL" priceEur={result.priceEur} summary={summary} />
         </div>

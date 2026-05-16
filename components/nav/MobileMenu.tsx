@@ -55,7 +55,7 @@ export function MobileMenu() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-inverse-surface opacity-40"
+        className="fixed inset-0 z-40 bg-ink opacity-40"
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
@@ -67,7 +67,7 @@ export function MobileMenu() {
       >
         <button
           onClick={() => setOpen(false)}
-          className="self-end text-on-surface-variant hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+          className="self-end text-steel hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
           aria-label="Close menu"
         >
           <span className="material-symbols-outlined" aria-hidden="true">close</span>
@@ -80,8 +80,8 @@ export function MobileMenu() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 font-label-caps text-label-caps uppercase tracking-widest transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
-                active ? "text-primary" : "text-on-surface-variant",
+                "flex items-center gap-3 text-xs font-semibold uppercase tracking-widest transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
+                active ? "text-primary" : "text-steel",
               )}
               aria-current={active ? "page" : undefined}
             >

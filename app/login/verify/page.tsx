@@ -18,18 +18,18 @@ export default function VerifyPage() {
         </span>
 
         <h1
-          style={{ fontFamily: "var(--font-manrope)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
-          className="text-on-background"
+          style={{ fontFamily: "var(--font-editorial)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
+          className="text-ink"
         >
           Check your inbox
         </h1>
 
-        <p className="text-on-surface-variant" style={{ fontSize: "16px", lineHeight: "1.5" }}>
+        <p className="text-steel" style={{ fontSize: "16px", lineHeight: "1.5" }}>
           We sent you a sign-in link. Click the link in the email to continue.
           The link expires in 24 hours.
         </p>
 
-        <p className="text-on-surface-variant" style={{ fontSize: "14px", lineHeight: "1.5" }}>
+        <p className="text-steel" style={{ fontSize: "14px", lineHeight: "1.5" }}>
           Didn&apos;t receive it? Check your spam folder, or{" "}
           <Link
             href="/login"

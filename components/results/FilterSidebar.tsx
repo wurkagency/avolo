@@ -71,7 +71,7 @@ function CheckGroup({ label, options, checked, onToggle }: {
   if (options.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">{label}</p>
+      <p className="text-xs font-medium text-steel uppercase tracking-wide">{label}</p>
       <div className="flex flex-col gap-1.5">
         {options.map((opt) => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -81,7 +81,7 @@ function CheckGroup({ label, options, checked, onToggle }: {
               onChange={() => onToggle(opt)}
               className="accent-primary"
             />
-            <span className="text-sm text-on-surface capitalize">{opt.toLowerCase().replace(/_/g, " ")}</span>
+            <span className="text-sm text-ink capitalize">{opt.toLowerCase().replace(/_/g, " ")}</span>
           </label>
         ))}
       </div>
@@ -106,16 +106,16 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
   }
 
   return (
-    <aside className="flex flex-col gap-5 rounded-2xl border border-outline-variant bg-surface-container-low p-5">
-      <h3 className="text-sm font-semibold text-on-surface">Filters</h3>
+    <aside className="flex flex-col gap-5 rounded-lg border border-hairline bg-canvas p-5">
+      <h3 className="text-sm font-semibold text-ink">Filters</h3>
 
       {/* Sort */}
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Sort by</p>
+        <p className="text-xs font-medium text-steel uppercase tracking-wide">Sort by</p>
         <select
           value={filters.sortBy}
           onChange={(e) => onChange({ ...filters, sortBy: e.target.value as FilterState["sortBy"] })}
-          className="rounded-xl border border-outline-variant bg-surface px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+          className="rounded-xl border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="rank">Best match</option>
           <option value="price_asc">Price: low to high</option>
@@ -125,7 +125,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       {/* Price */}
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max price</p>
+        <p className="text-xs font-medium text-steel uppercase tracking-wide">Max price</p>
         <div className="flex items-center gap-2">
           <input
             type="range"
@@ -136,7 +136,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
             onChange={(e) => onChange({ ...filters, maxPrice: parseInt(e.target.value, 10) })}
             className="flex-1 accent-primary"
           />
-          <span className="text-sm font-medium text-on-surface w-16 text-right">
+          <span className="text-sm font-medium text-ink w-16 text-right">
             {filters.maxPrice !== null ? `€${filters.maxPrice}` : "Any"}
           </span>
         </div>
@@ -148,7 +148,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
       {/* Refundable */}
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" checked={filters.refundableOnly} onChange={(e) => onChange({ ...filters, refundableOnly: e.target.checked })} className="accent-primary" />
-        <span className="text-sm text-on-surface">Refundable only</span>
+        <span className="text-sm text-ink">Refundable only</span>
       </label>
 
       {/* Risk */}
@@ -161,16 +161,16 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       {/* Flight filters */}
       {hasFlights && (
-        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+        <div className="flex flex-col gap-3 border-t border-hairline pt-4">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest">Flights</p>
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max stops</p>
+            <p className="text-xs font-medium text-steel uppercase tracking-wide">Max stops</p>
             <div className="flex gap-2 flex-wrap">
               {[0, 1, 2].map((n) => (
                 <button
                   key={n}
                   onClick={() => onChange({ ...filters, maxStops: filters.maxStops === n ? null : n })}
-                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${filters.maxStops === n ? "bg-primary text-white border-primary" : "border-outline-variant text-on-surface hover:bg-surface-container"}`}
+                  className={`rounded-md px-3 py-1 text-xs font-medium border transition-colors ${filters.maxStops === n ? "bg-primary text-white border-primary" : "border-hairline text-ink hover:bg-surface"}`}
                 >
                   {n === 0 ? "Non-stop" : n === 1 ? "1 stop" : "2+ stops"}
                 </button>
@@ -182,16 +182,16 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       {/* Hotel filters */}
       {hasHotels && (
-        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+        <div className="flex flex-col gap-3 border-t border-hairline pt-4">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest">Hotels</p>
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Min stars</p>
+            <p className="text-xs font-medium text-steel uppercase tracking-wide">Min stars</p>
             <div className="flex gap-2 flex-wrap">
               {[3, 4, 5].map((s) => (
                 <button
                   key={s}
                   onClick={() => onChange({ ...filters, minStars: filters.minStars === s ? null : s })}
-                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${filters.minStars === s ? "bg-primary text-white border-primary" : "border-outline-variant text-on-surface hover:bg-surface-container"}`}
+                  className={`rounded-md px-3 py-1 text-xs font-medium border transition-colors ${filters.minStars === s ? "bg-primary text-white border-primary" : "border-hairline text-ink hover:bg-surface"}`}
                 >
                   {"★".repeat(s)}
                 </button>
@@ -200,7 +200,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max distance to centre</p>
+            <p className="text-xs font-medium text-steel uppercase tracking-wide">Max distance to centre</p>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -220,14 +220,14 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={filters.breakfastOnly} onChange={(e) => onChange({ ...filters, breakfastOnly: e.target.checked })} className="accent-primary" />
-            <span className="text-sm text-on-surface">Breakfast included</span>
+            <span className="text-sm text-ink">Breakfast included</span>
           </label>
         </div>
       )}
 
       {/* Car filters */}
       {hasCars && (
-        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+        <div className="flex flex-col gap-3 border-t border-hairline pt-4">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest">Car Rental</p>
           <CheckGroup
             label="Car type"
@@ -240,7 +240,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       {/* Excursion filters */}
       {hasExcursions && (
-        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+        <div className="flex flex-col gap-3 border-t border-hairline pt-4">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest">Excursions</p>
           <CheckGroup
             label="Category"
@@ -249,7 +249,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
             onToggle={(v) => toggle("excursionCategories", filters.excursionCategories, v)}
           />
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max duration</p>
+            <p className="text-xs font-medium text-steel uppercase tracking-wide">Max duration</p>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -271,7 +271,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       <button
         onClick={() => onChange(DEFAULT_FILTERS)}
-        className="text-xs text-on-surface-variant hover:text-primary hover:underline self-start"
+        className="text-xs text-steel hover:text-primary hover:underline self-start"
       >
         Reset all filters
       </button>

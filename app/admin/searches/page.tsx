@@ -60,8 +60,8 @@ export default function AdminSearchesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h2 className="text-lg font-semibold text-on-surface">Search log</h2>
-        <div className="flex gap-1 rounded-xl border border-outline-variant overflow-hidden text-sm">
+        <h2 className="text-lg font-semibold text-ink">Search log</h2>
+        <div className="flex gap-1 rounded-xl border border-hairline overflow-hidden text-sm">
           {(["all", "true", "false"] as const).map((f) => (
             <button
               key={f}
@@ -69,7 +69,7 @@ export default function AdminSearchesPage() {
               className={`px-4 py-2 font-medium transition-colors ${
                 filter === f
                   ? "bg-primary text-white"
-                  : "text-on-surface-variant hover:bg-surface-container"
+                  : "text-steel hover:bg-surface"
               }`}
             >
               {f === "all" ? "All" : f === "true" ? "Success" : "Failed"}
@@ -79,29 +79,29 @@ export default function AdminSearchesPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-3 py-12 text-on-surface-variant">
+        <div className="flex items-center gap-3 py-12 text-steel">
           <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>Loading…</span>
         </div>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-on-surface-variant py-8">No searches found.</p>
+        <p className="text-sm text-steel py-8">No searches found.</p>
       ) : (
         <>
-          <div className="rounded-2xl border border-outline-variant overflow-x-auto">
+          <div className="rounded-lg border border-hairline overflow-x-auto">
             <table className="w-full text-sm min-w-[640px]">
               <thead>
-                <tr className="bg-surface-container text-left border-b border-outline-variant">
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Route</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Status</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Duration</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Providers</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Error</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">When</th>
+                <tr className="bg-surface text-left border-b border-hairline">
+                  <th className="px-4 py-3 font-medium text-steel">Route</th>
+                  <th className="px-4 py-3 font-medium text-steel">Status</th>
+                  <th className="px-4 py-3 font-medium text-steel">Duration</th>
+                  <th className="px-4 py-3 font-medium text-steel">Providers</th>
+                  <th className="px-4 py-3 font-medium text-steel">Error</th>
+                  <th className="px-4 py-3 font-medium text-steel">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant">
+              <tbody className="divide-y divide-hairline">
                 {rows.map((s) => (
-                  <tr key={s.id} className="hover:bg-surface-container/50 transition-colors">
+                  <tr key={s.id} className="hover:bg-surface/50 transition-colors">
                     <td className="px-4 py-3">
                       <Link
                         href={`/trip/${s.tripId}`}
@@ -121,10 +121,10 @@ export default function AdminSearchesPage() {
                         {s.success ? "OK" : "FAIL"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant tabular-nums">
+                    <td className="px-4 py-3 text-steel tabular-nums">
                       {formatMs(s.durationMs)}
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant max-w-[160px] truncate">
+                    <td className="px-4 py-3 text-steel max-w-[160px] truncate">
                       {Array.isArray(s.providers)
                         ? (s.providers as string[]).join(", ")
                         : typeof s.providers === "string"
@@ -134,7 +134,7 @@ export default function AdminSearchesPage() {
                     <td className="px-4 py-3 text-red-600 max-w-[200px] truncate">
                       {s.errorLog ? JSON.stringify(s.errorLog).slice(0, 60) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap tabular-nums">
+                    <td className="px-4 py-3 text-steel whitespace-nowrap tabular-nums">
                       {new Intl.DateTimeFormat("en", {
                         dateStyle: "short",
                         timeStyle: "short",
@@ -149,21 +149,21 @@ export default function AdminSearchesPage() {
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm text-on-surface-variant">
+              <p className="text-sm text-steel">
                 {pagination.total} total · page {pagination.page} of {pagination.totalPages}
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage((p) => p - 1)}
                   disabled={page <= 1}
-                  className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface disabled:opacity-40 hover:bg-surface-container transition-colors"
+                  className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-ink disabled:opacity-40 hover:bg-surface transition-colors"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= pagination.totalPages}
-                  className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface disabled:opacity-40 hover:bg-surface-container transition-colors"
+                  className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-ink disabled:opacity-40 hover:bg-surface transition-colors"
                 >
                   Next
                 </button>

@@ -38,9 +38,9 @@ export function CategorySection({ type, results, tripId, error }: CategorySectio
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-on-surface">{TITLES[type]}</h2>
+        <h2 className="text-xl font-semibold text-ink">{TITLES[type]}</h2>
         {results.length > 0 && (
-          <span className="text-sm text-on-surface-variant">{results.length} found</span>
+          <span className="text-sm text-steel">{results.length} found</span>
         )}
       </div>
 
@@ -49,7 +49,7 @@ export function CategorySection({ type, results, tripId, error }: CategorySectio
       )}
 
       {visible.length === 0 && !error ? (
-        <p className="text-sm text-on-surface-variant bg-surface-container-low rounded-2xl px-5 py-6 text-center">
+        <p className="text-sm text-steel bg-canvas rounded-lg px-5 py-6 text-center">
           No {TITLES[type].toLowerCase()} found for your search.
         </p>
       ) : (

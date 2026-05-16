@@ -28,8 +28,8 @@ export default function TripsPage() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="flex items-center justify-between mb-8">
         <h1
-          className="text-3xl font-bold text-on-surface"
-          style={{ fontFamily: "var(--font-manrope)" }}
+          className="text-3xl font-bold text-ink"
+          style={{ fontFamily: "var(--font-editorial)" }}
         >
           My Trips
         </h1>
@@ -43,9 +43,9 @@ export default function TripsPage() {
 
       {/* Anonymous banner */}
       {data?.isAnonymous && data.trips.length > 0 && (
-        <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-outline-variant bg-surface-container-low px-5 py-4">
-          <p className="text-sm text-on-surface-variant">
-            <strong className="text-on-surface">Sign in</strong> to save your trips permanently across devices.
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas px-5 py-4">
+          <p className="text-sm text-steel">
+            <strong className="text-ink">Sign in</strong> to save your trips permanently across devices.
           </p>
           <Link
             href="/login"
@@ -57,7 +57,7 @@ export default function TripsPage() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center gap-3 py-12 text-on-surface-variant">
+        <div className="flex items-center gap-3 py-12 text-steel">
           <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>Loading trips…</span>
         </div>

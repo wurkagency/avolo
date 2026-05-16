@@ -46,7 +46,7 @@ export function RefreshPricesButton({ tripId, onRefreshed, variant = "card" }: R
       <button
         onClick={handleRefresh}
         disabled={loading}
-        className="flex items-center gap-2 rounded-full border border-outline-variant px-5 py-2 text-sm font-medium text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 rounded-md border border-hairline px-5 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
         aria-label="Refresh prices"
       >
         <span

@@ -79,7 +79,7 @@ export default async function AdminOverviewPage() {
 
       {/* KPI grid */}
       <section>
-        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide mb-4">
+        <h2 className="text-sm font-semibold text-steel uppercase tracking-wide mb-4">
           Platform
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -100,7 +100,7 @@ export default async function AdminOverviewPage() {
 
       {/* Search health */}
       <section>
-        <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide mb-4">
+        <h2 className="text-sm font-semibold text-steel uppercase tracking-wide mb-4">
           Search health
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -128,18 +128,18 @@ export default async function AdminOverviewPage() {
       <div className="grid lg:grid-cols-3 gap-6">
 
         {/* Top destinations */}
-        <section className="rounded-2xl border border-outline-variant p-5">
-          <h2 className="text-sm font-semibold text-on-surface mb-4">Top destinations</h2>
+        <section className="rounded-lg border border-hairline p-5">
+          <h2 className="text-sm font-semibold text-ink mb-4">Top destinations</h2>
           {topDestinations.length === 0 ? (
-            <p className="text-sm text-on-surface-variant">No data yet</p>
+            <p className="text-sm text-steel">No data yet</p>
           ) : (
             <ol className="flex flex-col gap-2">
               {topDestinations.map((d, i) => (
                 <li key={d.destination} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs text-on-surface-variant w-4 shrink-0">{i + 1}.</span>
-                    <span className="text-sm text-on-surface truncate">{d.destinationName}</span>
-                    <span className="text-xs text-on-surface-variant shrink-0">({d.destination})</span>
+                    <span className="text-xs text-steel w-4 shrink-0">{i + 1}.</span>
+                    <span className="text-sm text-ink truncate">{d.destinationName}</span>
+                    <span className="text-xs text-steel shrink-0">({d.destination})</span>
                   </div>
                   <span className="text-sm font-semibold text-primary shrink-0">{d._count.id}</span>
                 </li>
@@ -149,10 +149,10 @@ export default async function AdminOverviewPage() {
         </section>
 
         {/* Provider usage */}
-        <section className="rounded-2xl border border-outline-variant p-5">
-          <h2 className="text-sm font-semibold text-on-surface mb-4">Provider usage</h2>
+        <section className="rounded-lg border border-hairline p-5">
+          <h2 className="text-sm font-semibold text-ink mb-4">Provider usage</h2>
           {providerBreakdown.length === 0 ? (
-            <p className="text-sm text-on-surface-variant">No results cached yet</p>
+            <p className="text-sm text-steel">No results cached yet</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {providerBreakdown.map((p) => {
@@ -161,10 +161,10 @@ export default async function AdminOverviewPage() {
                 return (
                   <li key={p.provider}>
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-sm text-on-surface capitalize">{p.provider}</span>
-                      <span className="text-sm font-semibold text-on-surface">{p._count.id}</span>
+                      <span className="text-sm text-ink capitalize">{p.provider}</span>
+                      <span className="text-sm font-semibold text-ink">{p._count.id}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-surface-container overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-surface overflow-hidden">
                       <div
                         className="h-full rounded-full bg-primary/60"
                         style={{ width: `${pct}%` }}
@@ -178,10 +178,10 @@ export default async function AdminOverviewPage() {
         </section>
 
         {/* Service type breakdown */}
-        <section className="rounded-2xl border border-outline-variant p-5">
-          <h2 className="text-sm font-semibold text-on-surface mb-4">Results by type</h2>
+        <section className="rounded-lg border border-hairline p-5">
+          <h2 className="text-sm font-semibold text-ink mb-4">Results by type</h2>
           {serviceTypeBreakdown.length === 0 ? (
-            <p className="text-sm text-on-surface-variant">No results cached yet</p>
+            <p className="text-sm text-steel">No results cached yet</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {serviceTypeBreakdown.map((s) => {
@@ -190,14 +190,14 @@ export default async function AdminOverviewPage() {
                 return (
                   <li key={s.serviceType}>
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-sm text-on-surface capitalize">
+                      <span className="text-sm text-ink capitalize">
                         {s.serviceType.charAt(0) + s.serviceType.slice(1).toLowerCase()}
                       </span>
-                      <span className="text-sm font-semibold text-on-surface">{s._count.id}</span>
+                      <span className="text-sm font-semibold text-ink">{s._count.id}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-surface-container overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-surface overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-secondary/60"
+                        className="h-full rounded-full bg-primary/60"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -212,32 +212,32 @@ export default async function AdminOverviewPage() {
       {/* Recent failures */}
       {recentFailures.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide mb-4">
+          <h2 className="text-sm font-semibold text-steel uppercase tracking-wide mb-4">
             Recent search failures
           </h2>
-          <div className="rounded-2xl border border-outline-variant overflow-hidden">
+          <div className="rounded-lg border border-hairline overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-surface-container text-left">
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Route</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Duration</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">Error</th>
-                  <th className="px-4 py-3 font-medium text-on-surface-variant">When</th>
+                <tr className="bg-surface text-left">
+                  <th className="px-4 py-3 font-medium text-steel">Route</th>
+                  <th className="px-4 py-3 font-medium text-steel">Duration</th>
+                  <th className="px-4 py-3 font-medium text-steel">Error</th>
+                  <th className="px-4 py-3 font-medium text-steel">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant">
+              <tbody className="divide-y divide-hairline">
                 {recentFailures.map((s) => (
                   <tr key={s.id}>
-                    <td className="px-4 py-3 text-on-surface">
+                    <td className="px-4 py-3 text-ink">
                       {s.trip.departureName} → {s.trip.destinationName}
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant">{formatMs(s.durationMs)}</td>
+                    <td className="px-4 py-3 text-steel">{formatMs(s.durationMs)}</td>
                     <td className="px-4 py-3 text-red-600 max-w-xs truncate">
                       {s.errorLog
                         ? JSON.stringify(s.errorLog).slice(0, 80)
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">
+                    <td className="px-4 py-3 text-steel whitespace-nowrap">
                       {new Intl.DateTimeFormat("en", { dateStyle: "short", timeStyle: "short" }).format(
                         new Date(s.createdAt),
                       )}

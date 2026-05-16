@@ -56,7 +56,7 @@ export function MicButton({ onTranscript, className }: MicButtonProps) {
       onClick={startListening}
       disabled={listening}
       className={cn(
-        "flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors",
+        "flex items-center gap-2 text-steel hover:text-primary transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded",
         "disabled:opacity-60",
         className,

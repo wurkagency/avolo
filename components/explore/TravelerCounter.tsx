@@ -27,14 +27,14 @@ function Counter({
   onChange: (n: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-4 border-b border-outline-variant last:border-0">
+    <div className="flex items-center justify-between gap-4 py-4 border-b border-hairline last:border-0">
       <div className="flex flex-col gap-0.5">
         <span style={{ fontFamily: "var(--font-inter)", fontSize: "16px", fontWeight: 600, lineHeight: "1.4" }}>
           {label}
         </span>
         {sub && (
           <span
-            className="text-on-surface-variant"
+            className="text-steel"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
           >
             {sub}
@@ -51,7 +51,7 @@ function Counter({
             "w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             value <= min
-              ? "border-outline-variant text-on-surface-variant opacity-40 cursor-not-allowed"
+              ? "border-hairline text-steel opacity-40 cursor-not-allowed"
               : "border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer",
           )}
         >
@@ -73,7 +73,7 @@ function Counter({
             "w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             value >= max
-              ? "border-outline-variant text-on-surface-variant opacity-40 cursor-not-allowed"
+              ? "border-hairline text-steel opacity-40 cursor-not-allowed"
               : "border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer",
           )}
         >
@@ -109,7 +109,7 @@ export function TravelerCounter({
   }
 
   return (
-    <div className="flex flex-col gap-0 bg-surface-container-low border border-outline-variant rounded-2xl px-5">
+    <div className="flex flex-col gap-0 bg-canvas border border-hairline rounded-lg px-5">
       <Counter label="Adults" sub="18+ years" value={adults} min={1} max={9} onChange={onChangeAdults} />
       <Counter
         label="Children"
@@ -130,7 +130,7 @@ export function TravelerCounter({
             <div key={i} className="flex flex-col gap-1">
               <label
                 htmlFor={`child-age-${i}`}
-                className="text-on-surface-variant uppercase tracking-widest"
+                className="text-steel uppercase tracking-widest"
                 style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600 }}
               >
                 Child {i + 1}
@@ -140,7 +140,7 @@ export function TravelerCounter({
                 value={age}
                 onChange={(e) => setChildAge(i, parseInt(e.target.value, 10))}
                 className={cn(
-                  "bg-surface border border-outline-variant rounded-lg px-3 py-2 text-on-surface",
+                  "bg-surface border border-hairline rounded-lg px-3 py-2 text-ink",
                   "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "14px" }}
@@ -164,7 +164,7 @@ export function TravelerCounter({
             Reduced mobility
           </span>
           <span
-            className="text-on-surface-variant"
+            className="text-steel"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
           >
             Wheelchair or assistance needed
@@ -178,7 +178,7 @@ export function TravelerCounter({
           className={cn(
             "relative inline-flex h-7 w-12 shrink-0 rounded-full border-2 transition-colors",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer",
-            hasDisability ? "bg-primary border-primary" : "bg-surface-container border-outline-variant",
+            hasDisability ? "bg-primary border-primary" : "bg-surface border-hairline",
           )}
           aria-label="Toggle reduced mobility"
         >

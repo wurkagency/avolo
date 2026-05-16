@@ -43,8 +43,8 @@ async function ArticleMeta({ slug, destination, iataCode }: {
           </span>
         </div>
         <h1
-          className="text-3xl font-bold text-on-surface"
-          style={{ fontFamily: "var(--font-manrope)" }}
+          className="text-3xl font-bold text-ink"
+          style={{ fontFamily: "var(--font-editorial)" }}
         >
           {destination} Travel Guide
         </h1>
@@ -64,15 +64,15 @@ async function ArticleMeta({ slug, destination, iataCode }: {
         <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">
           {article.iataCode}
         </span>
-        <span className="text-xs text-on-surface-variant">
+        <span className="text-xs text-steel">
           {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
             new Date(article.generatedAt),
           )}
         </span>
       </div>
       <h1
-        className="text-3xl font-bold text-on-surface"
-        style={{ fontFamily: "var(--font-manrope)" }}
+        className="text-3xl font-bold text-ink"
+        style={{ fontFamily: "var(--font-editorial)" }}
       >
         {article.title}
       </h1>
@@ -89,7 +89,7 @@ export default function JournalArticlePage({ params, searchParams }: Props) {
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link
         href="/journal"
-        className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-on-surface mb-8 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-steel hover:text-ink mb-8 transition-colors"
       >
         <span className="material-symbols-outlined text-base">arrow_back</span>
         Travel Journal
@@ -97,7 +97,7 @@ export default function JournalArticlePage({ params, searchParams }: Props) {
 
       <Suspense
         fallback={
-          <div className="h-10 w-64 rounded-xl bg-surface-container animate-pulse mb-8" />
+          <div className="h-10 w-64 rounded-xl bg-surface animate-pulse mb-8" />
         }
       >
         <ArticleMeta slug={slug} destination={destination} iataCode={iataCode} />
@@ -106,12 +106,12 @@ export default function JournalArticlePage({ params, searchParams }: Props) {
       <Suspense
         fallback={
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 py-4 text-on-surface-variant">
+            <div className="flex items-center gap-3 py-4 text-steel">
               <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span>Generating travel guide…</span>
             </div>
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-4 rounded bg-surface-container animate-pulse" style={{ width: `${75 + (i % 3) * 10}%` }} />
+              <div key={i} className="h-4 rounded bg-surface animate-pulse" style={{ width: `${75 + (i % 3) * 10}%` }} />
             ))}
           </div>
         }

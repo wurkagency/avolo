@@ -174,7 +174,7 @@ export function DatePicker({
       <div key={`${year}-${month}`} className="flex flex-col gap-3 flex-1 min-w-0">
         {/* Month header */}
         <div
-          className="text-on-surface font-bold"
+          className="text-ink font-bold"
           style={{ fontFamily: "var(--font-inter)", fontSize: "16px", lineHeight: "1.5" }}
         >
           {monthName}
@@ -185,7 +185,7 @@ export function DatePicker({
           {WEEKDAYS.map((wd) => (
             <div
               key={wd}
-              className="text-on-surface-variant"
+              className="text-steel"
               style={{ fontFamily: "var(--font-inter)", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", paddingBottom: "4px" }}
             >
               {wd}
@@ -213,8 +213,8 @@ export function DatePicker({
                 onMouseEnter={() => handleDayHover(cell.dateStr!)}
                 className={cn(
                   "relative py-2.5 text-center transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                  past && "text-surface-dim cursor-not-allowed",
-                  !past && !dep && !ret && !inRange && "hover:bg-surface-container cursor-pointer text-on-surface",
+                  past && "text-muted cursor-not-allowed",
+                  !past && !dep && !ret && !inRange && "hover:bg-surface cursor-pointer text-ink",
                   dep && "bg-primary text-on-primary font-bold rounded-lg cursor-pointer",
                   ret && "bg-primary-fixed-dim text-primary font-bold rounded-lg cursor-pointer",
                   inRange && !dep && !ret && "bg-primary-fixed text-primary rounded-none cursor-pointer",
@@ -236,7 +236,7 @@ export function DatePicker({
   return (
     <div className="flex flex-col gap-6">
       {/* One-way / Return toggle */}
-      <div className="flex items-center gap-1 bg-surface-container rounded-full p-1 self-start">
+      <div className="flex items-center gap-1 bg-surface rounded-full p-1 self-start">
         {(["return", "one-way"] as const).map((mode) => {
           const active = mode === "one-way" ? isOneWay : !isOneWay;
           return (
@@ -251,8 +251,8 @@ export function DatePicker({
               className={cn(
                 "px-5 py-2 rounded-full transition-all capitalize",
                 active
-                  ? "bg-surface text-on-surface shadow-sm"
-                  : "text-on-surface-variant hover:text-on-surface",
+                  ? "bg-surface text-ink shadow-sm"
+                  : "text-steel hover:text-ink",
               )}
               style={{ fontFamily: "var(--font-inter)", fontSize: "14px", fontWeight: active ? 600 : 400 }}
             >
@@ -264,7 +264,7 @@ export function DatePicker({
 
       {/* Calendar — two months side by side on md+, stacked on mobile */}
       <div
-        className="bg-surface-container-low border border-outline-variant rounded-xl p-5"
+        className="bg-canvas border border-hairline rounded-xl p-5"
         onMouseLeave={() => setHoverDate(null)}
       >
         {/* Navigation */}
@@ -273,7 +273,7 @@ export function DatePicker({
             type="button"
             onClick={() => setViewMonth((m) => addMonths(m, -1))}
             disabled={viewMonth <= startOfMonth(today)}
-            className="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-2 rounded-full hover:bg-surface transition-colors text-steel disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Previous month"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_left</span>
@@ -281,7 +281,7 @@ export function DatePicker({
           <button
             type="button"
             onClick={() => setViewMonth((m) => addMonths(m, 1))}
-            className="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-2 rounded-full hover:bg-surface transition-colors text-steel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Next month"
           >
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_right</span>
@@ -297,7 +297,7 @@ export function DatePicker({
       {/* Flexibility chips */}
       <div className="flex flex-col gap-3">
         <span
-          className="text-on-surface-variant uppercase tracking-widest"
+          className="text-steel uppercase tracking-widest"
           style={{ fontFamily: "var(--font-inter)", fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em" }}
         >
           Date flexibility
@@ -314,8 +314,8 @@ export function DatePicker({
                   "flex flex-col items-center justify-center px-5 py-3 min-w-[110px] rounded-xl border transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   selected
-                    ? "border-primary bg-secondary-container text-on-secondary-container"
-                    : "border-outline-variant hover:border-primary text-on-surface",
+                    ? "border-primary bg-cream-light text-ink-tint"
+                    : "border-hairline hover:border-primary text-ink",
                 )}
               >
                 <span style={{ fontFamily: "var(--font-inter)", fontSize: "15px", fontWeight: 600, lineHeight: "1.4" }}>

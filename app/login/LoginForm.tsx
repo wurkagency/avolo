@@ -76,14 +76,14 @@ export function LoginForm() {
             mark_email_read
           </span>
           <h1
-            style={{ fontFamily: "var(--font-manrope)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
-            className="text-on-background"
+            style={{ fontFamily: "var(--font-editorial)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
+            className="text-ink"
           >
             Check your inbox
           </h1>
-          <p className="text-on-surface-variant" style={{ fontSize: "16px", lineHeight: "1.5" }}>
+          <p className="text-steel" style={{ fontSize: "16px", lineHeight: "1.5" }}>
             We sent a sign-in link to{" "}
-            <strong className="text-on-surface">{email}</strong>. Click the link
+            <strong className="text-ink">{email}</strong>. Click the link
             to continue — it expires in 24 hours.
           </p>
           <button
@@ -104,12 +104,12 @@ export function LoginForm() {
         {/* Header */}
         <div className="flex flex-col gap-2">
           <h1
-            style={{ fontFamily: "var(--font-manrope)", fontSize: "48px", lineHeight: "1.1", letterSpacing: "-0.02em" }}
-            className="text-on-background"
+            style={{ fontFamily: "var(--font-editorial)", fontSize: "48px", lineHeight: "1.1", letterSpacing: "-0.02em" }}
+            className="text-ink"
           >
             Sign in
           </h1>
-          <p className="text-on-surface-variant" style={{ fontSize: "20px", lineHeight: "1.6" }}>
+          <p className="text-steel" style={{ fontSize: "20px", lineHeight: "1.6" }}>
             No password required.
           </p>
         </div>
@@ -142,11 +142,11 @@ export function LoginForm() {
 
         {/* Divider */}
         <div className="flex items-center gap-4" aria-hidden="true">
-          <div className="flex-1 h-px bg-outline-variant" />
-          <span className="text-on-surface-variant" style={{ fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}>
+          <div className="flex-1 h-px bg-hairline" />
+          <span className="text-steel" style={{ fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}>
             or
           </span>
-          <div className="flex-1 h-px bg-outline-variant" />
+          <div className="flex-1 h-px bg-hairline" />
         </div>
 
         {/* Magic link form */}
@@ -176,7 +176,7 @@ export function LoginForm() {
         </form>
 
         {/* Legal */}
-        <p className="text-on-surface-variant text-center" style={{ fontSize: "12px", lineHeight: "1.5" }}>
+        <p className="text-steel text-center" style={{ fontSize: "12px", lineHeight: "1.5" }}>
           By signing in you agree to our{" "}
           <a href="/terms" className="text-primary underline underline-offset-1 hover:opacity-80">Terms</a>
           {" "}and{" "}

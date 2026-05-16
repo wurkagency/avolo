@@ -178,7 +178,7 @@ export function AutocompleteInput({
     <div ref={containerRef} className={cn("relative flex flex-col gap-1.5", className)}>
       <label
         htmlFor={id}
-        className="text-on-surface-variant uppercase tracking-widest"
+        className="text-steel uppercase tracking-widest"
         style={{ fontFamily: "var(--font-inter)", fontSize: "12px", fontWeight: 600, letterSpacing: "0.1em" }}
       >
         {label}
@@ -209,12 +209,12 @@ export function AutocompleteInput({
           }}
           autoFocus={autoFocus}
           className={cn(
-            "w-full bg-surface-container-low border rounded-xl px-4 py-4 pr-10",
+            "w-full bg-canvas border rounded-xl px-4 py-4 pr-10",
             "transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
             hasSelection
-              ? "border-primary text-on-surface"
-              : "border-outline-variant text-on-surface",
-            "placeholder:text-on-surface-variant",
+              ? "border-primary text-ink"
+              : "border-hairline text-ink",
+            "placeholder:text-steel",
           )}
           style={{ fontFamily: "var(--font-inter)", fontSize: "20px", lineHeight: "1.6" }}
         />
@@ -223,7 +223,7 @@ export function AutocompleteInput({
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
           {loading ? (
             <svg
-              className="animate-spin h-5 w-5 text-on-surface-variant"
+              className="animate-spin h-5 w-5 text-steel"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -244,12 +244,12 @@ export function AutocompleteInput({
                 inputRef.current?.focus();
               }}
               aria-label="Clear selection"
-              className="text-on-surface-variant hover:text-on-surface focus-visible:outline-none rounded"
+              className="text-steel hover:text-ink focus-visible:outline-none rounded"
             >
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
             </button>
           ) : (
-            <span className="material-symbols-outlined text-[20px] text-on-surface-variant pointer-events-none" aria-hidden="true">
+            <span className="material-symbols-outlined text-[20px] text-steel pointer-events-none" aria-hidden="true">
               flight
             </span>
           )}
@@ -263,7 +263,7 @@ export function AutocompleteInput({
           id={listboxId}
           role="listbox"
           aria-label={label}
-          className="absolute top-full left-0 right-0 mt-1 z-50 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto py-1"
+          className="absolute top-full left-0 right-0 mt-1 z-50 bg-surface border border-hairline rounded-xl shadow-lg max-h-60 overflow-y-auto py-1"
         >
           {options.map((airport, i) => {
             const city = airport.municipality ?? airport.name;
@@ -281,7 +281,7 @@ export function AutocompleteInput({
                 onMouseEnter={() => setActiveIndex(i)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
-                  isActive ? "bg-primary-fixed text-primary" : "hover:bg-surface-container-low",
+                  isActive ? "bg-primary-fixed text-primary" : "hover:bg-canvas",
                 )}
               >
                 {/* IATA badge */}
@@ -298,14 +298,14 @@ export function AutocompleteInput({
                 {/* City + name */}
                 <div className="flex flex-col min-w-0">
                   <span
-                    className="text-on-surface truncate"
+                    className="text-ink truncate"
                     style={{ fontFamily: "var(--font-inter)", fontSize: "15px", lineHeight: "1.4" }}
                   >
                     {city}
                   </span>
                   {city !== airport.name && (
                     <span
-                      className="text-on-surface-variant truncate"
+                      className="text-steel truncate"
                       style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
                     >
                       {airport.name}
@@ -315,7 +315,7 @@ export function AutocompleteInput({
 
                 {/* Country */}
                 <span
-                  className="ml-auto shrink-0 text-on-surface-variant"
+                  className="ml-auto shrink-0 text-steel"
                   style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}
                 >
                   {airport.country}

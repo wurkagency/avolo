@@ -46,7 +46,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       {/* Custom backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-inverse-surface opacity-40 anim-fade"
+          className="fixed inset-0 z-40 bg-ink opacity-40 anim-fade"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <dialog
         ref={dialogRef}
         className={cn(
-          "relative z-50 bg-surface rounded-2xl shadow-xl p-6 w-full max-w-md anim-modal",
+          "relative z-50 bg-surface rounded-lg shadow-xl p-6 w-full max-w-md anim-modal",
           "focus-visible:outline-none",
           className,
         )}
@@ -65,14 +65,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         <div className="flex items-start justify-between mb-4">
           <h2
             id="modal-title"
-            style={{ fontFamily: "var(--font-manrope)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
-            className="text-on-surface"
+            style={{ fontFamily: "var(--font-editorial)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
+            className="text-ink"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="text-on-surface-variant hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            className="text-steel hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             aria-label="Close dialog"
           >
             <span className="material-symbols-outlined" aria-hidden="true">close</span>

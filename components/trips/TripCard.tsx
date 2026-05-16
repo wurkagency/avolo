@@ -68,19 +68,19 @@ export function TripCard({ trip }: TripCardProps) {
 
   return (
     <>
-      <article className="bg-surface border border-outline-variant rounded-2xl p-5 flex flex-col gap-4 hover:border-primary/30 transition-colors">
+      <article className="bg-surface border border-hairline rounded-lg p-5 flex flex-col gap-4 hover:border-primary/30 transition-colors">
         {/* Header row */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <Link href={`/trip/${trip.id}`} className="hover:text-primary transition-colors">
               <h2
-                className="font-semibold text-on-surface text-base leading-tight"
-                style={{ fontFamily: "var(--font-manrope)" }}
+                className="font-semibold text-ink text-base leading-tight"
+                style={{ fontFamily: "var(--font-editorial)" }}
               >
                 {trip.departureName} → {trip.destinationName}
               </h2>
             </Link>
-            <p className="text-xs text-on-surface-variant mt-1">
+            <p className="text-xs text-steel mt-1">
               {formatDate(trip.departureDate)}
               {trip.returnDate ? ` – ${formatDate(trip.returnDate)}` : " (one-way)"}
               {" · "}
@@ -108,7 +108,7 @@ export function TripCard({ trip }: TripCardProps) {
             <span
               key={svc}
               title={svc.charAt(0) + svc.slice(1).toLowerCase()}
-              className="material-symbols-outlined text-on-surface-variant"
+              className="material-symbols-outlined text-steel"
               style={{ fontSize: "20px", fontVariationSettings: "'FILL' 0, 'wght' 300" }}
               aria-label={svc.toLowerCase()}
             >
@@ -121,12 +121,12 @@ export function TripCard({ trip }: TripCardProps) {
         {canRefresh && trip.totalPriceEur !== null && (
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-primary">{format(trip.totalPriceEur!)}</span>
-            <span className="text-xs text-on-surface-variant">estimated total</span>
+            <span className="text-xs text-steel">estimated total</span>
           </div>
         )}
 
         {/* Footer row */}
-        <div className="flex items-center justify-between border-t border-outline-variant pt-3 gap-3 flex-wrap">
+        <div className="flex items-center justify-between border-t border-hairline pt-3 gap-3 flex-wrap">
           <div className="flex items-center gap-4">
             {canRefresh && (
               <RefreshPricesButton
@@ -134,7 +134,7 @@ export function TripCard({ trip }: TripCardProps) {
                 onRefreshed={() => queryClient.invalidateQueries({ queryKey: ["trips"] })}
               />
             )}
-            <span className="text-xs text-on-surface-variant">
+            <span className="text-xs text-steel">
               {trip.lastRefreshedAt
                 ? `Refreshed ${formatRelativeTime(trip.lastRefreshedAt)}`
                 : `Added ${formatRelativeTime(trip.createdAt)}`}
@@ -144,13 +144,13 @@ export function TripCard({ trip }: TripCardProps) {
           <div className="flex items-center gap-3">
             <Link
               href={`/trip/${trip.id}`}
-              className="rounded-full border border-outline-variant px-4 py-1.5 text-xs font-medium text-on-surface hover:bg-surface-container transition-colors"
+              className="rounded-md border border-hairline px-4 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
             >
               View details
             </Link>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="rounded-full p-1.5 text-on-surface-variant hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="rounded-full p-1.5 text-steel hover:text-red-600 hover:bg-red-50 transition-colors"
               aria-label="Remove this trip"
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">delete_outline</span>
@@ -165,15 +165,15 @@ export function TripCard({ trip }: TripCardProps) {
         onClose={() => setShowDeleteModal(false)}
         title="Remove trip?"
       >
-        <p className="text-on-surface-variant text-sm mb-6">
+        <p className="text-steel text-sm mb-6">
           This will permanently remove your trip to{" "}
-          <strong className="text-on-surface">{trip.destinationName}</strong> and all its saved results.
+          <strong className="text-ink">{trip.destinationName}</strong> and all its saved results.
           This cannot be undone.
         </p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={() => setShowDeleteModal(false)}
-            className="rounded-full border border-outline-variant px-5 py-2 text-sm font-medium text-on-surface hover:bg-surface-container transition-colors"
+            className="rounded-md border border-hairline px-5 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors"
           >
             Cancel
           </button>
