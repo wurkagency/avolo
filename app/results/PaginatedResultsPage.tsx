@@ -9,6 +9,7 @@ import { HotelCard } from "@/components/results/HotelCard";
 import { CarCard } from "@/components/results/CarCard";
 import { ExcursionCard } from "@/components/results/ExcursionCard";
 import { FilterSidebar, applyFilters, DEFAULT_FILTERS, type FilterState } from "@/components/results/FilterSidebar";
+import { SelectionBar } from "@/components/results/SelectionBar";
 import type { NormalizedResult } from "@/types/search";
 import type { ServiceType } from "@/types/trip";
 
@@ -17,12 +18,12 @@ interface PaginatedResultsPageProps {
   title: string;
 }
 
-function renderCard(result: NormalizedResult) {
+function renderCard(result: NormalizedResult, tripId: string) {
   switch (result.serviceType) {
-    case "FLIGHT": return <FlightCard key={result.id} result={result} />;
-    case "HOTEL": return <HotelCard key={result.id} result={result} />;
-    case "CAR": return <CarCard key={result.id} result={result} />;
-    case "EXCURSION": return <ExcursionCard key={result.id} result={result} />;
+    case "FLIGHT": return <FlightCard key={result.id} result={result} tripId={tripId} />;
+    case "HOTEL": return <HotelCard key={result.id} result={result} tripId={tripId} />;
+    case "CAR": return <CarCard key={result.id} result={result} tripId={tripId} />;
+    case "EXCURSION": return <ExcursionCard key={result.id} result={result} tripId={tripId} />;
   }
 }
 
@@ -99,11 +100,10 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
             <p className="text-on-surface-variant text-center py-12">No results match your filters.</p>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {filtered.map(renderCard)}
+              <div className="flex flex-col gap-3">
+                {filtered.map((r) => renderCard(r, tripId))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <button
@@ -113,9 +113,7 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-on-surface-variant">
-                    Page {page} of {totalPages}
-                  </span>
+                  <span className="text-sm text-on-surface-variant">Page {page} of {totalPages}</span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
@@ -129,6 +127,8 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
           )}
         </div>
       </div>
+
+      <SelectionBar />
     </main>
   );
 }

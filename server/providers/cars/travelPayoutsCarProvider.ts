@@ -23,6 +23,7 @@ export interface TravelPayoutsCarRaw {
   totalPriceEur: number;
   insurance: string;     // basic | full | credit-card
   deepLink: string;
+  imageUrl: string | null;
 }
 
 interface CarRentalResponse {
@@ -75,10 +76,14 @@ export async function fetchTravelPayoutsCars(
     throw new Error("TravelPayouts cars returned unexpected shape");
   }
 
-  return body.data.map((item) => ({
-    ...item,
-    days: numDays,
-    pickupDate,
-    dropoffDate,
-  }));
+  return body.data.map((item) => {
+    // TravelPayouts car API returns vehicle_image or picture_url depending on partner
+    const raw = item as unknown as Record<string, unknown>;
+    const imageUrl =
+      (raw.vehicle_image as string | null) ??
+      (raw.picture_url as string | null) ??
+      (raw.image_url as string | null) ??
+      null;
+    return { ...item, days: numDays, pickupDate, dropoffDate, imageUrl };
+  });
 }

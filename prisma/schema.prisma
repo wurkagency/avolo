@@ -163,6 +163,7 @@ model Trip {
   services         TripService[]
   results          CachedResult[]
   searches         Search[]
+  selection        TripSelection?
 
   @@index([userId])
   @@index([anonymousSessionId])
@@ -200,6 +201,31 @@ model CachedResult {
 
   @@index([tripId, serviceType])
   @@map("cached_results")
+}
+
+// ── Trip Selection (user's chosen items per trip) ─────────────────────────────
+
+model TripSelection {
+  id                  String   @id @default(cuid())
+  tripId              String   @unique
+  flightResultId      String?
+  flightPriceEur      Float?
+  flightSummary       String?
+  hotelResultId       String?
+  hotelPriceEur       Float?
+  hotelSummary        String?
+  carResultId         String?
+  carPriceEur         Float?
+  carSummary          String?
+  excursionResultId   String?
+  excursionPriceEur   Float?
+  excursionSummary    String?
+  totalPriceEur       Float?
+  updatedAt           DateTime @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_selections")
 }
 
 // ── Search Log ────────────────────────────────────────────────────────────────

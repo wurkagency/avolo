@@ -13,7 +13,6 @@ const TITLES: Record<ServiceType, string> = {
   EXCURSION: "Excursions",
 };
 
-// Top N results to show inline before "See more" button
 const INLINE_LIMIT = 4;
 
 interface CategorySectionProps {
@@ -23,12 +22,12 @@ interface CategorySectionProps {
   error?: string;
 }
 
-function renderCard(result: NormalizedResult) {
+function renderCard(result: NormalizedResult, tripId: string) {
   switch (result.serviceType) {
-    case "FLIGHT": return <FlightCard key={result.id} result={result} />;
-    case "HOTEL": return <HotelCard key={result.id} result={result} />;
-    case "CAR": return <CarCard key={result.id} result={result} />;
-    case "EXCURSION": return <ExcursionCard key={result.id} result={result} />;
+    case "FLIGHT": return <FlightCard key={result.id} result={result} tripId={tripId} />;
+    case "HOTEL": return <HotelCard key={result.id} result={result} tripId={tripId} />;
+    case "CAR": return <CarCard key={result.id} result={result} tripId={tripId} />;
+    case "EXCURSION": return <ExcursionCard key={result.id} result={result} tripId={tripId} />;
   }
 }
 
@@ -55,16 +54,10 @@ export function CategorySection({ type, results, tripId, error }: CategorySectio
         </p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {visible.map(renderCard)}
+          <div className="flex flex-col gap-3">
+            {visible.map((r) => renderCard(r, tripId))}
           </div>
-
-          <SeeMoreButton
-            serviceType={type}
-            tripId={tripId}
-            total={results.length}
-            shown={visible.length}
-          />
+          <SeeMoreButton serviceType={type} tripId={tripId} total={results.length} shown={visible.length} />
         </>
       )}
     </section>

@@ -6,6 +6,8 @@ import { useSSEStream } from "@/lib/api/streamClient";
 import { useTripStore } from "@/lib/state/tripStore";
 import { SSEStatus } from "@/components/results/SSEStatus";
 import { ResultsGrid } from "@/components/results/ResultsGrid";
+import { SelectionBar } from "@/components/results/SelectionBar";
+import { useSelectionStore } from "@/lib/state/selectionStore";
 import type { ServiceType } from "@/types/trip";
 import type { NormalizedResult } from "@/types/search";
 
@@ -39,6 +41,7 @@ export function ResultsPageInner() {
   const params = useSearchParams();
   const tripId = params.get("tripId");
 
+  const setSelectionTripId = useSelectionStore((s) => s.setTripId);
   const storeServices = useTripStore((s) => s.services);
   const storeDeparture = useTripStore((s) => s.departure);
   const storeDestination = useTripStore((s) => s.destination);
@@ -86,7 +89,8 @@ export function ResultsPageInner() {
 
   useEffect(() => {
     if (!tripId) router.replace("/explore");
-  }, [tripId, router]);
+    else setSelectionTripId(tripId);
+  }, [tripId, router, setSelectionTripId]);
 
   if (!tripId) return null;
 
@@ -138,6 +142,7 @@ export function ResultsPageInner() {
         tripId={tripId}
         requestedServices={requestedServices}
       />
+      <SelectionBar />
     </main>
   );
 }

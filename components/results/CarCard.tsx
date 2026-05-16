@@ -1,69 +1,80 @@
 "use client";
 
+import Link from "next/link";
 import type { NormalizedResult } from "@/types/search";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatDate } from "@/lib/utils/formatDate";
 import { SlotBadge } from "./SlotBadge";
 import { RiskBadge } from "./RiskBadge";
+import { AddToTripButton } from "./AddToTripButton";
 
 interface CarCardProps {
   result: NormalizedResult;
+  tripId: string;
 }
 
-export function CarCard({ result }: CarCardProps) {
+export function CarCard({ result, tripId }: CarCardProps) {
   const { format } = useCurrency();
   const c = result.car;
   if (!c) return null;
 
-  return (
-    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex flex-col gap-4">
-      {c.imageUrl && (
-        <div className="h-40 bg-surface-container overflow-hidden">
-          <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
-        </div>
-      )}
-      <div className="flex items-start justify-between gap-3 px-5 pt-1">
-        <div>
-          <p className="font-semibold text-on-surface">{c.make} {c.model}</p>
-          <p className="text-xs text-on-surface-variant mt-0.5 capitalize">
-            {c.category} · {c.seats} seats · {c.supplier}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1.5 justify-end">
-          {result.aiSlot && <SlotBadge slot={result.aiSlot} isPrimary={result.rank === 0} />}
-          <RiskBadge level={result.riskLevel} reasons={result.riskReasons} />
-        </div>
-      </div>
+  const summary = `${c.make} ${c.model} · ${c.category} · ${c.supplier}`;
 
-      <div className="flex flex-col gap-1 text-sm text-on-surface-variant px-5">
-        <div className="flex items-start gap-2">
-          <span className="material-symbols-outlined text-base">location_on</span>
-          <div>
-            <p className="text-on-surface font-medium">{c.pickupLocation}</p>
-            <p className="text-xs">{formatDate(c.pickupDate)} → {formatDate(c.dropoffDate)}</p>
+  return (
+    <article className="bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex min-h-[120px]">
+      {/* Image */}
+      <Link
+        href={`/results/cars/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}
+        className="w-40 shrink-0 bg-surface-container overflow-hidden"
+        tabIndex={-1}
+      >
+        {c.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">directions_car</span>
+          </div>
+        )}
+      </Link>
+
+      {/* Content */}
+      <div className="flex-1 p-4 flex flex-col gap-2 min-w-0">
+        <div className="flex items-start justify-between gap-2 flex-wrap">
+          <div className="min-w-0">
+            <Link href={`/results/cars/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}>
+              <p className="font-semibold text-on-surface text-sm hover:text-primary transition-colors">{c.make} {c.model}</p>
+            </Link>
+            <p className="text-xs text-on-surface-variant mt-0.5 capitalize">{c.category} · {c.seats} seats · {c.supplier}</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5 shrink-0">
+            {result.aiSlot && <SlotBadge slot={result.aiSlot} isPrimary={result.rank === 0} />}
+            <RiskBadge level={result.riskLevel} reasons={result.riskReasons} />
           </div>
         </div>
-        <p className="text-xs ml-6">{c.days} day{c.days !== 1 ? "s" : ""} · {c.insurance}</p>
-      </div>
 
-      <div className="flex items-center justify-between border-t border-outline-variant pt-3 px-5 pb-5">
-        <div>
-          <p className="text-2xl font-bold text-primary">{format(result.priceEur)}</p>
-          <p className="text-xs text-on-surface-variant">total for {c.days} day{c.days !== 1 ? "s" : ""}</p>
+        <div className="flex items-start gap-2 text-xs text-on-surface-variant">
+          <span className="material-symbols-outlined text-sm">location_on</span>
+          <div>
+            <p className="text-on-surface font-medium">{c.pickupLocation}</p>
+            <p>{formatDate(c.pickupDate)} → {formatDate(c.dropoffDate)}</p>
+          </div>
         </div>
-        <a
-          href={result.deepLinkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
-        >
-          Book now
-        </a>
-      </div>
 
-      {result.aiSummary && (
-        <p className="text-xs text-on-surface-variant border-t border-outline-variant pt-3 px-5 pb-5">{result.aiSummary}</p>
-      )}
+        <p className="text-xs text-on-surface-variant">{c.days} day{c.days !== 1 ? "s" : ""} · {c.insurance} insurance</p>
+
+        {result.aiSummary && (
+          <p className="text-xs text-on-surface-variant">{result.aiSummary}</p>
+        )}
+
+        <div className="flex items-center justify-between gap-3 border-t border-outline-variant pt-2 mt-auto flex-wrap">
+          <div>
+            <p className="text-xl font-bold text-primary">{format(result.priceEur)}</p>
+            <p className="text-xs text-on-surface-variant">total {c.days} day{c.days !== 1 ? "s" : ""}</p>
+          </div>
+          <AddToTripButton tripId={tripId} resultId={result.id} type="CAR" priceEur={result.priceEur} summary={summary} />
+        </div>
+      </div>
     </article>
   );
 }
