@@ -29,18 +29,18 @@ export default function HotelDetailPage({ params }: { params: { id: string } }) 
         if (r?.hotel) {
           const initial = r.hotel.imageUrl ? [r.hotel.imageUrl] : [];
           setGalleryPhotos(initial);
-          // Fetch real hotel photos from Hotellook (TravelPayouts)
           const hotelIdMatch = r.id.match(/^tp-hotel-(\d+)-/);
           const hotelId = hotelIdMatch?.[1] ?? null;
-          if (hotelId) {
-            fetch(`/api/photos/hotel?hotelId=${encodeURIComponent(hotelId)}`)
-              .then((res) => res.json())
-              .then((data) => {
-                const photos = data.photos as string[];
-                if (photos.length > 0) setGalleryPhotos(photos.slice(0, 6));
-              })
-              .catch(() => null);
-          }
+          const photoParams = new URLSearchParams();
+          if (hotelId) photoParams.set("hotelId", hotelId);
+          photoParams.set("name", r.hotel.name);
+          fetch(`/api/photos/hotel?${photoParams.toString()}`)
+            .then((res) => res.json())
+            .then((data) => {
+              const photos = data.photos as string[];
+              if (photos.length > 0) setGalleryPhotos(photos.slice(0, 6));
+            })
+            .catch(() => null);
         }
       })
       .catch(() => setResult(null))

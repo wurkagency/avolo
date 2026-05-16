@@ -21,10 +21,12 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
 
   useEffect(() => {
     if (!h || h.imageUrl) return;
-    const match = result.id.match(/^tp-hotel-(\d+)-/);
-    const hotelId = match?.[1];
-    if (!hotelId) return;
-    fetch(`/api/photos/hotel?hotelId=${encodeURIComponent(hotelId)}`)
+    const hotelIdMatch = result.id.match(/^tp-hotel-(\d+)-/);
+    const hotelId = hotelIdMatch?.[1];
+    const params = new URLSearchParams();
+    if (hotelId) params.set("hotelId", hotelId);
+    params.set("name", h.name);
+    fetch(`/api/photos/hotel?${params.toString()}`)
       .then((r) => r.json())
       .then((d) => { const first = (d.photos as string[])[0]; if (first) setPhotoUrl(first); })
       .catch(() => null);
