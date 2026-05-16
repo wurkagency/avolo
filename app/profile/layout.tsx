@@ -1,16 +1,14 @@
-// Profile section layout — sidebar nav (settings / preferences / notifications)
-// Authentication is enforced by middleware.ts (/profile/* → redirect to /login)
-
 import type { ReactNode } from "react";
+import { AppShell } from "@/components/layout/AppShell";
 import { ProfileSidebar } from "@/components/profile/ProfileSidebar";
 
 export default function ProfileLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="flex flex-col md:flex-row gap-8">
+    <AppShell>
+      <div className="flex gap-8 px-8 py-10 max-w-5xl mx-auto w-full">
         <ProfileSidebar />
         <div className="flex-1 min-w-0">{children}</div>
       </div>
-    </div>
+    </AppShell>
   );
 }

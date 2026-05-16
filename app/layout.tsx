@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { TopBar } from "@/components/nav/TopBar";
-import { MobileMenu } from "@/components/nav/MobileMenu";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import { SunsetStripeBand } from "@/components/ui/SunsetStripeBand";
 
 const editorial = Playfair_Display({
   subsets: ["latin"],
@@ -62,13 +59,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
       </head>
-      <body className="text-ink bg-surface min-h-dvh flex flex-col" style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>
+      <body className="text-ink bg-surface" style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>
         <NextAuthProvider>
           <QueryProvider>
-            <TopBar />
-            <MobileMenu />
-            <main className="flex-1 pt-[72px]">{children}</main>
-            <SunsetStripeBand />
+            {children}
             <ToastProvider />
           </QueryProvider>
         </NextAuthProvider>

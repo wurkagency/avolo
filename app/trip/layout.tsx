@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
 
-export default function ExploreLayout({ children }: { children: React.ReactNode }) {
+export default function TripLayout({ children }: { children: React.ReactNode }) {
   return <AppShell>{children}</AppShell>;
 }
