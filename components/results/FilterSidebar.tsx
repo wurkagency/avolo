@@ -161,25 +161,29 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
 
       {/* Flight filters */}
       {hasFlights && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max stops</p>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 1, 2].map((n) => (
-              <button
-                key={n}
-                onClick={() => onChange({ ...filters, maxStops: filters.maxStops === n ? null : n })}
-                className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${filters.maxStops === n ? "bg-primary text-white border-primary" : "border-outline-variant text-on-surface hover:bg-surface-container"}`}
-              >
-                {n === 0 ? "Non-stop" : n === 1 ? "1 stop" : "2+ stops"}
-              </button>
-            ))}
+        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest">Flights</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Max stops</p>
+            <div className="flex gap-2 flex-wrap">
+              {[0, 1, 2].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => onChange({ ...filters, maxStops: filters.maxStops === n ? null : n })}
+                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${filters.maxStops === n ? "bg-primary text-white border-primary" : "border-outline-variant text-on-surface hover:bg-surface-container"}`}
+                >
+                  {n === 0 ? "Non-stop" : n === 1 ? "1 stop" : "2+ stops"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Hotel filters */}
       {hasHotels && (
-        <>
+        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest">Hotels</p>
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Min stars</p>
             <div className="flex gap-2 flex-wrap">
@@ -218,22 +222,26 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
             <input type="checkbox" checked={filters.breakfastOnly} onChange={(e) => onChange({ ...filters, breakfastOnly: e.target.checked })} className="accent-primary" />
             <span className="text-sm text-on-surface">Breakfast included</span>
           </label>
-        </>
+        </div>
       )}
 
       {/* Car filters */}
       {hasCars && (
-        <CheckGroup
-          label="Car type"
-          options={carCategories}
-          checked={filters.carCategories}
-          onToggle={(v) => toggle("carCategories", filters.carCategories, v)}
-        />
+        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest">Car Rental</p>
+          <CheckGroup
+            label="Car type"
+            options={carCategories}
+            checked={filters.carCategories}
+            onToggle={(v) => toggle("carCategories", filters.carCategories, v)}
+          />
+        </div>
       )}
 
       {/* Excursion filters */}
       {hasExcursions && (
-        <>
+        <div className="flex flex-col gap-3 border-t border-outline-variant pt-4">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest">Excursions</p>
           <CheckGroup
             label="Category"
             options={excursionCategories}
@@ -258,7 +266,7 @@ export function FilterSidebar({ results, filters, onChange }: FilterSidebarProps
               <button onClick={() => onChange({ ...filters, maxDurationHours: null })} className="text-xs text-primary hover:underline self-start">Clear</button>
             )}
           </div>
-        </>
+        </div>
       )}
 
       <button
