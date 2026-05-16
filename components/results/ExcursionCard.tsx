@@ -27,7 +27,8 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
       .then((r) => r.json())
       .then((d) => { const first = (d.photos as string[])[0]; if (first) setPhotoUrl(first); })
       .catch(() => null);
-  }, [e]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [e?.title, e?.location, e?.imageUrl]);
 
   if (!e) return null;
 

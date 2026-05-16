@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchHotellookPhotos, fetchPlacesPhotos } from "@/lib/server/photos";
+import { fetchHotellookPhotos, fetchPlacesPhotos, fetchUnsplashPhotos } from "@/lib/server/photos";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -11,10 +11,13 @@ export async function GET(req: Request) {
     if (photos.length > 0) return NextResponse.json({ photos });
   }
 
-  // Fallback: Google Places by hotel name (also handles stubs)
   if (name) {
-    const photos = await fetchPlacesPhotos(name, 4);
-    return NextResponse.json({ photos });
+    const placesPhotos = await fetchPlacesPhotos(name, 4);
+    if (placesPhotos.length > 0) return NextResponse.json({ photos: placesPhotos });
+
+    // Unsplash fallback: stub hotels or when Places can't find the specific hotel
+    const unsplashPhotos = await fetchUnsplashPhotos(`${name} hotel`, 4);
+    if (unsplashPhotos.length > 0) return NextResponse.json({ photos: unsplashPhotos });
   }
 
   return NextResponse.json({ photos: [] });

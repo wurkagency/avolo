@@ -30,7 +30,8 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
       .then((r) => r.json())
       .then((d) => { const first = (d.photos as string[])[0]; if (first) setPhotoUrl(first); })
       .catch(() => null);
-  }, [result.id, h]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.id, h?.imageUrl]);
 
   if (!h) return null;
 

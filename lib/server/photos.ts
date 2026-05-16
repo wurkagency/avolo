@@ -1,9 +1,12 @@
 const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY ?? "";
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY ?? "";
+const TP_KEY = process.env.TRAVELPAYOUTS_API_KEY ?? "";
 
 export async function fetchHotellookPhotos(hotelId: string, count = 6): Promise<string[]> {
   try {
-    const url = `https://yasen.hotellook.com/photos/hotel_photos?id=${encodeURIComponent(hotelId)}`;
+    const params = new URLSearchParams({ id: hotelId, limit: String(count) });
+    if (TP_KEY) params.set("token", TP_KEY);
+    const url = `https://yasen.hotellook.com/photos/hotel_photos?${params.toString()}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
     if (!res.ok) return [];
     const body = await res.json() as Record<string, unknown[]>;
@@ -12,12 +15,15 @@ export async function fetchHotellookPhotos(hotelId: string, count = 6): Promise<
     const refs = body[firstKey];
     if (!Array.isArray(refs) || refs.length === 0) return [];
     return refs.slice(0, count).flatMap((ref) => {
-      const id = typeof ref === "string" || typeof ref === "number"
-        ? String(ref)
-        : (ref as { id?: string | number }).id !== undefined
-          ? String((ref as { id: string | number }).id)
-          : null;
-      return id ? [`https://photo.hotellook.com/image_v2/limit/${id}/800/520.jpg`] : [];
+      // Hotellook returns either hash strings (e.g. "h12345_0") or numeric photo indices
+      const raw = typeof ref === "object" && ref !== null
+        ? (ref as { id?: string | number; filename?: string }).filename
+          ?? String((ref as { id?: string | number }).id ?? "")
+        : String(ref);
+      if (!raw) return [];
+      // Hash strings (h12345_0) are used directly; numeric indices need hotel prefix
+      const photoRef = /^\d+$/.test(raw) ? `${hotelId}/${raw}` : raw.replace(/\.[^.]+$/, "");
+      return [`https://photo.hotellook.com/image_v2/limit/${photoRef}/800/520.jpg`];
     });
   } catch {
     return [];

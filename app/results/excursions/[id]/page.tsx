@@ -35,12 +35,10 @@ export default function ExcursionDetailPage({ params }: { params: { id: string }
           fetch(`/api/photos/excursion?title=${title}&location=${location}`)
             .then((res) => res.json())
             .then((data) => {
-              const placesPhotos = data.photos as string[];
-              if (placesPhotos.length > 0) {
-                const combined = Array.from(new Set(placesPhotos)).slice(0, 6);
-                setGalleryPhotos(combined);
+              const photos = data.photos as string[];
+              if (photos.length > 0) {
+                setGalleryPhotos(Array.from(new Set(photos)).slice(0, 6));
               }
-              // If Places returns nothing, keep the single imageUrl (no Unsplash fallback)
             })
             .catch(() => null);
         }
