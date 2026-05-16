@@ -115,7 +115,7 @@ export default function ExcursionDetailPage({ params }: { params: { id: string }
             </section>
           )}
 
-          {galleryPhotos.length > 1 && (
+          {galleryPhotos.length > 0 && (
             <section>
               <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-3">Photos</p>
               <PhotoGallery photos={galleryPhotos} alt={e.title} />

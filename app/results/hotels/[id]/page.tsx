@@ -27,7 +27,20 @@ export default function HotelDetailPage({ params }: { params: { id: string } }) 
         const r = d.result as NormalizedResult | null;
         setResult(r ?? null);
         if (r?.hotel) {
-          setGalleryPhotos(r.hotel.imageUrl ? [r.hotel.imageUrl] : []);
+          const initial = r.hotel.imageUrl ? [r.hotel.imageUrl] : [];
+          setGalleryPhotos(initial);
+          // Fetch real hotel photos from Hotellook (TravelPayouts)
+          const hotelIdMatch = r.id.match(/^tp-hotel-(\d+)-/);
+          const hotelId = hotelIdMatch?.[1] ?? null;
+          if (hotelId) {
+            fetch(`/api/photos/hotel?hotelId=${encodeURIComponent(hotelId)}`)
+              .then((res) => res.json())
+              .then((data) => {
+                const photos = data.photos as string[];
+                if (photos.length > 0) setGalleryPhotos(photos.slice(0, 6));
+              })
+              .catch(() => null);
+          }
         }
       })
       .catch(() => setResult(null))
@@ -107,7 +120,7 @@ export default function HotelDetailPage({ params }: { params: { id: string } }) 
           </section>
 
           {/* Photo gallery */}
-          {galleryPhotos.length > 1 && (
+          {galleryPhotos.length > 0 && (
             <section>
               <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-3">Photos</p>
               <PhotoGallery photos={galleryPhotos} alt={h.name} />

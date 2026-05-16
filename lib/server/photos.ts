@@ -1,6 +1,29 @@
 const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY ?? "";
 const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY ?? "";
 
+export async function fetchHotellookPhotos(hotelId: string, count = 6): Promise<string[]> {
+  try {
+    const url = `https://yasen.hotellook.com/photos/hotel_photos?id=${encodeURIComponent(hotelId)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+    if (!res.ok) return [];
+    const body = await res.json() as Record<string, unknown[]>;
+    const firstKey = Object.keys(body)[0] as string | undefined;
+    if (!firstKey) return [];
+    const refs = body[firstKey];
+    if (!Array.isArray(refs) || refs.length === 0) return [];
+    return refs.slice(0, count).flatMap((ref) => {
+      const id = typeof ref === "string" || typeof ref === "number"
+        ? String(ref)
+        : (ref as { id?: string | number }).id !== undefined
+          ? String((ref as { id: string | number }).id)
+          : null;
+      return id ? [`https://photo.hotellook.com/image_v2/limit/${id}/800/520.jpg`] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchUnsplashPhoto(query: string): Promise<string | null> {
   if (!UNSPLASH_KEY) return null;
   try {

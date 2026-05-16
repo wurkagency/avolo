@@ -26,9 +26,8 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
       .then((d) => {
         const r = d.result as NormalizedResult | null;
         setResult(r ?? null);
-        if (r?.car) {
-          setGalleryPhotos(r.car.imageUrl ? [r.car.imageUrl] : []);
-        }
+        // Only use the image URL provided by the booking source (TravelPayouts, etc.)
+        if (r?.car?.imageUrl) setGalleryPhotos([r.car.imageUrl]);
       })
       .catch(() => setResult(null))
       .finally(() => setLoading(false));
@@ -89,7 +88,7 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
             </div>
           </section>
 
-          {galleryPhotos.length > 1 && (
+          {galleryPhotos.length > 0 && (
             <section>
               <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide mb-3">Photos</p>
               <PhotoGallery photos={galleryPhotos} alt={`${c.make} ${c.model}`} />
