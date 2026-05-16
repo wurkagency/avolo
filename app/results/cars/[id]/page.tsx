@@ -27,16 +27,7 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
         const r = d.result as NormalizedResult | null;
         setResult(r ?? null);
         if (r?.car) {
-          const initial = r.car.imageUrl ? [r.car.imageUrl] : [];
-          setGalleryPhotos(initial);
-          const q = encodeURIComponent(`${r.car.make} ${r.car.model} car rental`);
-          fetch(`/api/photos/unsplash?query=${q}&count=5`)
-            .then((res) => res.json())
-            .then((data) => {
-              const extras = (data.photos as string[]).filter((p) => p !== r.car?.imageUrl);
-              setGalleryPhotos([...initial, ...extras].slice(0, 6));
-            })
-            .catch(() => null);
+          setGalleryPhotos(r.car.imageUrl ? [r.car.imageUrl] : []);
         }
       })
       .catch(() => setResult(null))

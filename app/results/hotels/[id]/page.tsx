@@ -27,17 +27,7 @@ export default function HotelDetailPage({ params }: { params: { id: string } }) 
         const r = d.result as NormalizedResult | null;
         setResult(r ?? null);
         if (r?.hotel) {
-          const initial = r.hotel.imageUrl ? [r.hotel.imageUrl] : [];
-          setGalleryPhotos(initial);
-          // Fetch additional Unsplash photos
-          const q = encodeURIComponent(`${r.hotel.name} hotel`);
-          fetch(`/api/photos/unsplash?query=${q}&count=5`)
-            .then((res) => res.json())
-            .then((data) => {
-              const extras = (data.photos as string[]).filter((p) => p !== r.hotel?.imageUrl);
-              setGalleryPhotos([...initial, ...extras].slice(0, 6));
-            })
-            .catch(() => null);
+          setGalleryPhotos(r.hotel.imageUrl ? [r.hotel.imageUrl] : []);
         }
       })
       .catch(() => setResult(null))

@@ -29,14 +29,18 @@ export default function ExcursionDetailPage({ params }: { params: { id: string }
         if (r?.excursion) {
           const initial = r.excursion.imageUrl ? [r.excursion.imageUrl] : [];
           setGalleryPhotos(initial);
-          // Google Places first, Unsplash fallback (handled by /api/photos/excursion)
+          // Google Places only — fetches photos of the specific location
           const title = encodeURIComponent(r.excursion.title);
           const location = encodeURIComponent(r.excursion.location);
           fetch(`/api/photos/excursion?title=${title}&location=${location}`)
             .then((res) => res.json())
             .then((data) => {
-              const extras = (data.photos as string[]).filter((p) => p !== r.excursion?.imageUrl);
-              setGalleryPhotos([...initial, ...extras].slice(0, 6));
+              const placesPhotos = data.photos as string[];
+              if (placesPhotos.length > 0) {
+                const combined = Array.from(new Set(placesPhotos)).slice(0, 6);
+                setGalleryPhotos(combined);
+              }
+              // If Places returns nothing, keep the single imageUrl (no Unsplash fallback)
             })
             .catch(() => null);
         }
