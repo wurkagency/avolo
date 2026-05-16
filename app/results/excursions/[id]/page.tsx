@@ -63,11 +63,11 @@ export default function ExcursionDetailPage({ params }: { params: { id: string }
         </Link>
       </div>
 
-      {/* Hero image */}
-      {e.imageUrl && (
+      {/* Hero image — first from Google Places gallery */}
+      {galleryPhotos[0] && (
         <div className="rounded-2xl overflow-hidden h-56 mb-6 bg-surface-container">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={e.imageUrl} alt={e.title} className="w-full h-full object-cover" />
+          <img src={galleryPhotos[0]} alt={e.title} className="w-full h-full object-cover" />
         </div>
       )}
 

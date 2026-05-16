@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { NormalizedResult } from "@/types/search";
 import { useCurrency } from "@/lib/hooks/useCurrency";
@@ -16,6 +17,19 @@ interface HotelCardProps {
 export function HotelCard({ result, tripId }: HotelCardProps) {
   const { format } = useCurrency();
   const h = result.hotel;
+  const [photoUrl, setPhotoUrl] = useState<string | null>(h?.imageUrl ?? null);
+
+  useEffect(() => {
+    if (!h || h.imageUrl) return;
+    const match = result.id.match(/^tp-hotel-(\d+)-/);
+    const hotelId = match?.[1];
+    if (!hotelId) return;
+    fetch(`/api/photos/hotel?hotelId=${encodeURIComponent(hotelId)}`)
+      .then((r) => r.json())
+      .then((d) => { const first = (d.photos as string[])[0]; if (first) setPhotoUrl(first); })
+      .catch(() => null);
+  }, [result.id, h]);
+
   if (!h) return null;
 
   const summary = `${h.name} · ${h.stars}★ · ${h.nights} night${h.nights !== 1 ? "s" : ""}`;
@@ -28,9 +42,9 @@ export function HotelCard({ result, tripId }: HotelCardProps) {
         className="w-40 shrink-0 bg-surface-container overflow-hidden"
         tabIndex={-1}
       >
-        {h.imageUrl ? (
+        {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={h.imageUrl} alt={h.name} className="w-full h-full object-cover" />
+          <img src={photoUrl} alt={h.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">hotel</span>

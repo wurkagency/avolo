@@ -47,11 +47,11 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
         </Link>
       </div>
 
-      {/* Hero image */}
-      {c.imageUrl && (
+      {/* Hero image — from TravelPayouts provider */}
+      {galleryPhotos[0] && (
         <div className="rounded-2xl overflow-hidden h-56 mb-6 bg-surface-container">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
+          <img src={galleryPhotos[0]} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
         </div>
       )}
 

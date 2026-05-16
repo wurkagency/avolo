@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { NormalizedResult } from "@/types/search";
 import { useCurrency } from "@/lib/hooks/useCurrency";
@@ -16,6 +17,18 @@ interface ExcursionCardProps {
 export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
   const { format } = useCurrency();
   const e = result.excursion;
+  const [photoUrl, setPhotoUrl] = useState<string | null>(e?.imageUrl ?? null);
+
+  useEffect(() => {
+    if (!e || e.imageUrl) return;
+    const title = encodeURIComponent(e.title);
+    const location = encodeURIComponent(e.location);
+    fetch(`/api/photos/excursion?title=${title}&location=${location}`)
+      .then((r) => r.json())
+      .then((d) => { const first = (d.photos as string[])[0]; if (first) setPhotoUrl(first); })
+      .catch(() => null);
+  }, [e]);
+
   if (!e) return null;
 
   const summary = `${e.title} · ${e.durationHours}h · ${e.category}`;
@@ -28,9 +41,9 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
         className="w-40 shrink-0 bg-surface-container overflow-hidden"
         tabIndex={-1}
       >
-        {e.imageUrl ? (
+        {photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={e.imageUrl} alt={e.title} className="w-full h-full object-cover" />
+          <img src={photoUrl} alt={e.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">hiking</span>

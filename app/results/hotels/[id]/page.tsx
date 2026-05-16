@@ -61,11 +61,11 @@ export default function HotelDetailPage({ params }: { params: { id: string } }) 
         </Link>
       </div>
 
-      {/* Hero image */}
-      {h.imageUrl && (
+      {/* Hero image — first from gallery (Hotellook) */}
+      {galleryPhotos[0] && (
         <div className="rounded-2xl overflow-hidden h-64 mb-6 bg-surface-container">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={h.imageUrl} alt={h.name} className="w-full h-full object-cover" />
+          <img src={galleryPhotos[0]} alt={h.name} className="w-full h-full object-cover" />
         </div>
       )}
 
