@@ -180,7 +180,7 @@ export function TripCard({ trip }: TripCardProps) {
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
           >
             {deleting ? "Removing…" : "Remove trip"}
           </button>

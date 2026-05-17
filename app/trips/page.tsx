@@ -35,7 +35,7 @@ export default function TripsPage() {
         </h1>
         <Link
           href="/explore"
-          className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+          className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-deep transition-colors"
         >
           + New trip
         </Link>
@@ -49,7 +49,7 @@ export default function TripsPage() {
           </p>
           <Link
             href="/login"
-            className="shrink-0 rounded-full border border-primary px-4 py-1.5 text-sm font-medium text-primary hover:bg-primary/5 transition-colors"
+            className="shrink-0 rounded-md border border-primary px-4 py-1.5 text-sm font-medium text-primary transition-colors"
           >
             Sign in
           </Link>
@@ -62,7 +62,7 @@ export default function TripsPage() {
           <span>Loading trips…</span>
         </div>
       ) : error ? (
-        <p className="text-red-600 bg-red-50 rounded-xl px-5 py-4 text-sm">
+        <p style={{ color: "var(--color-primary-deep)", backgroundColor: "var(--color-cream-deeper)", borderRadius: "var(--rounded-lg)", padding: "var(--spacing-md) var(--spacing-lg)", fontSize: 14 }}>
           {error instanceof Error ? error.message : "Could not load trips"}
         </p>
       ) : data?.trips.length === 0 ? (

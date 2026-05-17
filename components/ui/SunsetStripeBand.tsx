@@ -4,7 +4,7 @@ export function SunsetStripeBand() {
       aria-hidden="true"
       style={{
         height: "var(--spacing-lg)",
-        background: "linear-gradient(to right, #fa520f, #ffa110, #ffb83e, #ffd900, #fff8e0)",
+        background: "linear-gradient(to right, var(--color-primary), var(--color-sunshine-700), var(--color-sunshine-500), var(--color-yellow-saturated), var(--color-cream))",
         flexShrink: 0,
       }}
     />

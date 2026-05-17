@@ -109,7 +109,7 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    className="rounded-full px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
+                    className="rounded-md px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
                   >
                     Previous
                   </button>
@@ -117,7 +117,7 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
-                    className="rounded-full px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
+                    className="rounded-md px-4 py-2 text-sm font-medium border border-hairline disabled:opacity-40 hover:bg-surface transition-colors"
                   >
                     Next
                   </button>

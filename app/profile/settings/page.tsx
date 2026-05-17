@@ -394,7 +394,7 @@ export default function SettingsPage() {
           <button
             onClick={handleDeleteAccount}
             disabled={deleting || deleteEmail.trim().toLowerCase() !== session?.user?.email?.toLowerCase()}
-            className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-40"
+            className="rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-40"
           >
             {deleting ? "Deleting…" : "Delete forever"}
           </button>

@@ -23,7 +23,7 @@ export function EmptyTrips() {
       </div>
       <Link
         href="/explore"
-        className="rounded-md bg-primary px-8 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+        className="rounded-md bg-primary px-8 py-3 text-sm font-semibold text-white hover:bg-primary-deep transition-colors"
       >
         Plan a trip
       </Link>
