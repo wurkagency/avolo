@@ -14,9 +14,10 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
-source/Credentials.md
-source/ENV.md
-source/guidelines/ENV.md
+
+# Internal design docs and credentials — not for public repo
+docs/
+source/
 
 # Misc
 .DS_Store
