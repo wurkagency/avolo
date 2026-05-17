@@ -42,7 +42,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Image must be 5 MB or smaller" }, { status: 413 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(await file.arrayBuffer());
+  } catch {
+    return NextResponse.json({ error: "Failed to read uploaded file" }, { status: 400 });
+  }
 
   let webp: Buffer;
   try {

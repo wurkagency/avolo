@@ -119,8 +119,11 @@ function HomeInput() {
   const [isListening,  setIsListening]  = useState(false);
   const [showMicModal, setShowMicModal] = useState(false);
   const [micPermState, setMicPermState] = useState<"prompt" | "denied">("prompt");
-  const textareaRef    = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const textareaRef       = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef    = useRef<SpeechRecognitionInstance | null>(null);
+  // Tracks whether the current recognition attempt was triggered by the user
+  // clicking "Allow" in our modal — used to detect Permissions-Policy loops.
+  const micRetryRef = useRef(false);
 
   // Resize textarea whenever value changes (covers both keyboard input and speech).
   useEffect(() => {
@@ -239,7 +242,7 @@ function HomeInput() {
     recognition.interimResults = true;
     recognition.lang           = navigator.language || "en-US";
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => { micRetryRef.current = false; setIsListening(true); };
 
     recognition.onresult = (event) => {
       const transcript = Array.from(event.results)
@@ -252,13 +255,20 @@ function HomeInput() {
     recognition.onerror = (event) => {
       setIsListening(false);
       if (event.error === "not-allowed") {
+        const wasRetry = micRetryRef.current;
+        micRetryRef.current = false;
         void navigator.permissions
           .query({ name: "microphone" as PermissionName })
           .then((p) => {
-            if (p.state === "granted") {
-              // Browser permission is granted but the API is blocked — this is a
-              // Permissions-Policy header issue. Show a toast instead of an infinite modal loop.
-              addToast("Microphone is blocked by the page configuration. A site update is required.", "error");
+            // Two cases mean Permissions-Policy is blocking the API:
+            // 1. Browser says "granted" but recognition still fired not-allowed.
+            // 2. This was a retry from our Allow button yet still got not-allowed —
+            //    meaning the browser never showed its native dialog (policy blocked it).
+            if (p.state === "granted" || wasRetry) {
+              addToast(
+                "Microphone blocked. In your browser address bar click the lock icon → Permissions → Microphone → Allow.",
+                "error",
+              );
             } else {
               setMicPermState(p.state === "denied" ? "denied" : "prompt");
               setShowMicModal(true);
@@ -288,6 +298,7 @@ function HomeInput() {
 
   function handleMicAllow() {
     setShowMicModal(false);
+    micRetryRef.current = true;
     doStartRecognition();
   }
 
