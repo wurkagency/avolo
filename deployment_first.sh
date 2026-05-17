@@ -30,6 +30,26 @@ ok()    { echo -e "\033[1;32m  ✓\033[0m $*"; }
 warn()  { echo -e "\033[1;33m  !\033[0m $*"; }
 die()   { echo -e "\033[1;31mERROR:\033[0m $*" >&2; exit 1; }
 
+# load_env <file> — safely export KEY=VALUE pairs without bash-executing the file.
+# Handles: quoted values, unquoted values, URL-encoded chars (%, #), optional
+# 'export' prefix. Skips blank lines and lines starting with #.
+load_env() {
+  local file="${1:-.env}"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"         # strip leading whitespace
+    [[ -z "$line" || "$line" == \#* ]] && continue  # skip blank / comment lines
+    line="${line#export }"                            # strip optional 'export '
+    [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
+    local key="${BASH_REMATCH[1]}"
+    local val="${BASH_REMATCH[2]}"
+    # Strip surrounding double or single quotes
+    if   [[ "$val" =~ ^\"(.*)\"$ ]]; then val="${BASH_REMATCH[1]}"
+    elif [[ "$val" =~ ^\'(.*)\'$ ]]; then val="${BASH_REMATCH[1]}"
+    fi
+    export "$key=$val"
+  done < "$file"
+}
+
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
 info "[pre-flight] Checking environment"
 
@@ -122,12 +142,8 @@ ok "Static assets copied"
 # ── Step 7: Start application with PM2 ───────────────────────────────────────
 info "[7/8] Starting application with PM2"
 
-# Load .env into this shell's environment so PM2 inherits them on start.
-# Requires values to be shell-safe (KEY="value", no inline # comments after values).
-set -a
-# shellcheck disable=SC1091
-source .env
-set +a
+# Load .env safely — exports all vars so the PM2 child process inherits them.
+load_env .env
 
 # PORT and HOSTNAME are read from process.env by Next.js standalone — not CLI args.
 PORT="${PORT:-3000}"

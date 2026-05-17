@@ -30,6 +30,23 @@ ok()    { echo -e "\033[1;32m  ✓\033[0m $*"; }
 warn()  { echo -e "\033[1;33m  !\033[0m $*"; }
 die()   { echo -e "\033[1;31mERROR:\033[0m $*" >&2; exit 1; }
 
+# load_env <file> — safely export KEY=VALUE pairs without bash-executing the file.
+load_env() {
+  local file="${1:-.env}"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    line="${line#export }"
+    [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
+    local key="${BASH_REMATCH[1]}"
+    local val="${BASH_REMATCH[2]}"
+    if   [[ "$val" =~ ^\"(.*)\"$ ]]; then val="${BASH_REMATCH[1]}"
+    elif [[ "$val" =~ ^\'(.*)\'$ ]]; then val="${BASH_REMATCH[1]}"
+    fi
+    export "$key=$val"
+  done < "$file"
+}
+
 [ -d "$APP_DIR" ] || die "App directory not found: $APP_DIR — run deployment_first.sh first."
 cd "$APP_DIR"
 
@@ -88,11 +105,7 @@ ok "Static assets copied"
 info "[6/6] Restarting application via PM2"
 
 # Load .env into this shell before restart so --update-env picks them up.
-# Requires values to be shell-safe (KEY="value", no inline # comments after values).
-set -a
-# shellcheck disable=SC1091
-source .env
-set +a
+load_env .env
 
 # pm2 describe exits 0 if the process is registered (any state), non-zero if unknown.
 if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
