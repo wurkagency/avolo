@@ -39,7 +39,7 @@ export function StepWrapper({
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Progress bar */}
-      <div className="h-1 bg-surface w-full" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps}>
+      <div className="h-1 w-full" style={{ backgroundColor: "var(--color-hairline-soft)" }} role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps}>
         <div
           className="h-full bg-primary transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -68,7 +68,7 @@ export function StepWrapper({
 
       {/* Content — centered, max-width container */}
       <div className="flex-1 flex flex-col justify-center px-6 py-8">
-        <div className="w-full max-w-xl mx-auto flex flex-col gap-8" style={{ animation: "stepSlideIn 0.25s ease forwards" }}>
+        <div className="w-full mx-auto flex flex-col gap-8" style={{ maxWidth: 840, animation: "stepSlideIn 0.25s ease forwards" }}>
           {/* Heading */}
           <div className="flex flex-col gap-2">
             <h1
@@ -76,7 +76,7 @@ export function StepWrapper({
               style={{
                 fontFamily: "var(--font-editorial)",
                 fontSize: "clamp(28px, 5vw, 40px)",
-                fontWeight: 800,
+                fontWeight: 400,
                 lineHeight: 1.1,
                 letterSpacing: "-0.02em",
               }}
@@ -104,7 +104,7 @@ export function StepWrapper({
                 onClick={onSubmit}
                 disabled={submitDisabled}
                 className={cn(
-                  "w-full py-4 rounded-lg text-center transition-all",
+                  "w-full py-4 rounded-md text-center transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   submitDisabled
                     ? "bg-surface text-steel cursor-not-allowed opacity-50"
@@ -120,7 +120,7 @@ export function StepWrapper({
                 onClick={onNext}
                 disabled={nextDisabled}
                 className={cn(
-                  "w-full py-4 rounded-lg text-center transition-all",
+                  "w-full py-4 rounded-md text-center transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                   nextDisabled
                     ? "bg-surface text-steel cursor-not-allowed opacity-50"

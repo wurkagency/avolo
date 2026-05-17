@@ -36,6 +36,10 @@
   --color-on-cream: #1f1f1f;
   --color-footer-cream: #fff8e0;
   --color-link: #fa520f;
+  --color-primary-glow: rgba(250, 82, 15, 0.08);
+  --color-on-primary-overlay: rgba(255, 255, 255, 0.18);
+  --color-backdrop: rgba(31, 31, 31, 0.40);
+  --color-shadow-drawer: rgba(0, 0, 0, 0.12);
 
   /* Spacing */
   --spacing-xxs: 4px;

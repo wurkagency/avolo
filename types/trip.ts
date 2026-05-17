@@ -42,6 +42,11 @@ export interface TripDraft {
   specialLuggage: boolean;
 }
 
+/** Returned by POST /api/interpret-query — a partial TripDraft with field tracking. */
+export interface ParsedQuery extends Partial<TripDraft> {
+  filledFields: (keyof TripDraft)[];
+}
+
 export const defaultTripDraft: TripDraft = {
   departure: null,
   destination: null,

@@ -216,8 +216,8 @@ export function DatePicker({
                   past && "text-muted cursor-not-allowed",
                   !past && !dep && !ret && !inRange && "hover:bg-surface cursor-pointer text-ink",
                   dep && "bg-primary text-on-primary font-bold rounded-lg cursor-pointer",
-                  ret && "bg-primary-fixed-dim text-primary font-bold rounded-lg cursor-pointer",
-                  inRange && !dep && !ret && "bg-primary-fixed text-primary rounded-none cursor-pointer",
+                  ret && "bg-cream-deeper text-primary font-bold rounded-lg cursor-pointer",
+                  inRange && !dep && !ret && "bg-cream-light text-ink rounded-none cursor-pointer",
                   isToday && !dep && !ret && "underline underline-offset-2",
                 )}
                 style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: "1" }}

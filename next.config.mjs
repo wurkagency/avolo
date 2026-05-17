@@ -17,7 +17,7 @@ const nextConfig = {
 
   // Prisma must run in Node.js runtime, not Edge
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+    serverComponentsExternalPackages: ["@prisma/client", "prisma", "sharp"],
   },
 
   // Suppress noisy build warnings from Next.js internals

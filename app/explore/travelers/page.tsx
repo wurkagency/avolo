@@ -15,8 +15,8 @@ export default function ExploreStep4Page() {
     <StepWrapper
       step={4}
       totalSteps={5}
-      title="Who's travelling?"
-      subtitle="Add all passengers including children."
+      title="Who will be traveling?"
+      subtitle="Add all passengers, including children."
       onBack={() => router.push("/explore/dates")}
       onNext={() => router.push("/explore/luggage")}
     >

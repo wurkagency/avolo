@@ -16,17 +16,19 @@ interface ToastProps {
   onDismiss: (id: string) => void;
 }
 
+// All classes use the project token palette from tailwind.config.ts / tokens.css.
+// No Tailwind defaults (green-*, amber-*) — only design-system tokens.
 const typeClasses: Record<ToastType, string> = {
-  success: "bg-green-50 border-green-200 text-green-800",
-  error: "bg-error-container border-error text-error",
-  info: "bg-primary-fixed border-primary text-primary",
-  warning: "bg-amber-50 border-amber-200 text-amber-800",
+  success: "bg-cream-light  border-primary      text-primary-deep",
+  error:   "bg-error-container border-error     text-on-error-container",
+  info:    "bg-surface      border-hairline-strong text-steel",
+  warning: "bg-cream-deeper border-sunshine-700 text-ink",
 };
 
 const icons: Record<ToastType, string> = {
   success: "check_circle",
-  error: "error",
-  info: "info",
+  error:   "error",
+  info:    "info",
   warning: "warning",
 };
 
@@ -44,10 +46,16 @@ export function Toast({ toast, onDismiss }: ToastProps) {
         typeClasses[toast.type],
       )}
     >
-      <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5" aria-hidden="true">
+      <span
+        className="material-symbols-outlined text-[20px] shrink-0 mt-0.5"
+        aria-hidden="true"
+      >
         {icons[toast.type]}
       </span>
-      <p className="flex-1" style={{ fontFamily: "var(--font-inter)", fontSize: "16px", lineHeight: "1.5" }}>
+      <p
+        className="flex-1"
+        style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: "1.5" }}
+      >
         {toast.message}
       </p>
       <button

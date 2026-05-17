@@ -2,17 +2,17 @@ import type { AiSlot } from "@/types/search";
 import { cn } from "@/lib/utils/cn";
 
 const SLOT_LABELS: Record<string, string> = {
-  BEST_VALUE: "Best value",
-  CHEAPEST: "Cheapest",
-  FASTEST: "Fastest",
-  BEST_RATED: "Best rated",
-  MOST_CENTRAL: "Most central",
-  CLOSEST_PICKUP: "Closest pickup",
-  BEST_COVERED: "Best covered",
-  BEST_EXPERIENCE: "Best experience",
-  MUST_SEE: "Must see",
-  HIDDEN_GEM: "Hidden gem",
-  BEST_BUDGET: "Best budget",
+  BEST_VALUE:      "Best Choice",
+  CHEAPEST:        "Cheapest Option",
+  FASTEST:         "Shortest Travel Time",
+  BEST_RATED:      "Best Rating",
+  MOST_CENTRAL:    "Most Central",
+  CLOSEST_PICKUP:  "Closest Pickup",
+  BEST_COVERED:    "Best Covered",
+  BEST_EXPERIENCE: "Best Experience",
+  MUST_SEE:        "Must-See",
+  HIDDEN_GEM:      "Hidden Gem",
+  BEST_BUDGET:     "Best Budget",
 };
 
 interface SlotBadgeProps {

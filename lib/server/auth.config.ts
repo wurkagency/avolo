@@ -28,6 +28,7 @@ export const authConfig = {
         (session.user as unknown as AvoloUser).role = (token.role as string) ?? "USER";
         (session.user as unknown as AvoloUser).currency = (token.currency as string) ?? "EUR";
         (session.user as unknown as AvoloUser).language = (token.language as string) ?? "EN";
+        session.user.image = (token.picture as string | null | undefined) ?? null;
       }
       return session;
     },

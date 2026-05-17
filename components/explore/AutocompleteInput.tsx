@@ -281,7 +281,7 @@ export function AutocompleteInput({
                 onMouseEnter={() => setActiveIndex(i)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
-                  isActive ? "bg-primary-fixed text-primary" : "hover:bg-canvas",
+                  isActive ? "bg-cream-light text-primary" : "hover:bg-canvas",
                 )}
               >
                 {/* IATA badge */}

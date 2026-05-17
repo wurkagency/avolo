@@ -8,12 +8,15 @@ node_modules
 out/
 .seed-dist/
 
-# Environment
+# Environment & credentials — never commit real secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+source/Credentials.md
+source/ENV.md
+source/guidelines/ENV.md
 
 # Misc
 .DS_Store

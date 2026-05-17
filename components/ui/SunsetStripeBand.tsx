@@ -2,9 +2,10 @@ export function SunsetStripeBand() {
   return (
     <div
       aria-hidden="true"
-      className="h-3 w-full"
       style={{
-        background: "linear-gradient(to right, #ffd06a, #ff8105, #fa520f, #cc3a05)",
+        height: "var(--spacing-lg)",
+        background: "linear-gradient(to right, #fa520f, #ffa110, #ffb83e, #ffd900, #fff8e0)",
+        flexShrink: 0,
       }}
     />
   );

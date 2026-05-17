@@ -2,59 +2,73 @@
 
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 
-const errorMessages: Record<string, string> = {
-  OAuthSignin: "Something went wrong with social sign-in. Please try again.",
-  OAuthCallback: "Something went wrong with social sign-in. Please try again.",
-  OAuthCreateAccount: "Could not create an account. Please try again.",
-  EmailCreateAccount: "Could not create an account. Please try again.",
-  Callback: "Something went wrong. Please try again.",
-  OAuthAccountNotLinked: "This email is already linked to a different sign-in method.",
-  EmailSignin: "Could not send the sign-in link. Please check your email address.",
-  CredentialsSignin: "Invalid credentials.",
-  SessionRequired: "Please sign in to continue.",
-  Default: "Something went wrong. Please try again.",
+// ─── Typography tokens ────────────────────────────────────────────────────────
+const t = {
+  heading1:    { fontSize: 48, fontWeight: 400, lineHeight: 1.10, letterSpacing: "-0.02em" },
+  subtitle:    { fontSize: 18, fontWeight: 400, lineHeight: 1.50 },
+  bodySm:      { fontSize: 14, fontWeight: 400, lineHeight: 1.50 },
+  buttonMd:    { fontSize: 14, fontWeight: 500, lineHeight: 1.30 },
+  caption:     { fontSize: 13, fontWeight: 400, lineHeight: 1.40 },
+  microUpper:  { fontSize: 11, fontWeight: 600, lineHeight: 1.40, letterSpacing: "1px", textTransform: "uppercase" as const },
+};
+
+const AUTH_ERRORS: Record<string, string> = {
+  CredentialsSignin:      "Invalid email or password.",
+  OAuthSignin:            "Something went wrong with Google sign-in. Please try again.",
+  OAuthCallback:          "Something went wrong with Google sign-in. Please try again.",
+  OAuthAccountNotLinked:  "This email is already linked to a different sign-in method.",
+  Default:                "Something went wrong. Please try again.",
 };
 
 export function LoginForm() {
+  const router       = useRouter();
   const searchParams = useSearchParams();
-  const raw = searchParams.get("callbackUrl") ?? "";
-  const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/explore/services";
-  const error = searchParams.get("error");
 
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const raw         = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/explore";
+  const urlError    = searchParams.get("error");
+
+  const [email,         setEmail]         = useState("");
+  const [password,      setPassword]      = useState("");
+  const [error,         setError]         = useState<string | null>(
+    urlError ? (AUTH_ERRORS[urlError] ?? AUTH_ERRORS.Default ?? null) : null,
+  );
+  const [loading,       setLoading]       = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [sent, setSent] = useState(false);
 
-  const errorMessage = error ? (errorMessages[error] ?? errorMessages.Default) : null;
+  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
 
-  async function handleEmailSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!email.trim() || loading) return;
-
+    if (!canSubmit) return;
+    setError(null);
     setLoading(true);
+
     try {
-      const result = await signIn("nodemailer", {
-        email: email.trim(),
-        callbackUrl,
+      const result = await signIn("credentials", {
+        email:    email.trim().toLowerCase(),
+        password,
         redirect: false,
+        callbackUrl,
       });
 
-      if (result?.error) {
-        console.error("[login] Email sign-in error:", result.error);
+      if (result?.ok) {
+        router.push(callbackUrl);
+        router.refresh();
       } else {
-        setSent(true);
+        setError(AUTH_ERRORS.CredentialsSignin ?? "Invalid email or password.");
       }
+    } catch {
+      setError(AUTH_ERRORS.Default ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleGoogleSignIn() {
+  async function handleGoogle() {
     if (googleLoading) return;
     setGoogleLoading(true);
     try {
@@ -64,93 +78,61 @@ export function LoginForm() {
     }
   }
 
-  if (sent) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-72px)] px-gutter py-section-padding">
-        <div className="w-full max-w-sm flex flex-col gap-6 text-center">
-          <span
-            className="material-symbols-outlined text-primary mx-auto"
-            style={{ fontSize: "48px", fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48" }}
-            aria-hidden="true"
-          >
-            mark_email_read
-          </span>
-          <h1
-            style={{ fontFamily: "var(--font-editorial)", fontSize: "32px", lineHeight: "1.2", fontWeight: 500 }}
-            className="text-ink"
-          >
-            Check your inbox
-          </h1>
-          <p className="text-steel" style={{ fontSize: "16px", lineHeight: "1.5" }}>
-            We sent a sign-in link to{" "}
-            <strong className="text-ink">{email}</strong>. Click the link
-            to continue — it expires in 24 hours.
-          </p>
-          <button
-            onClick={() => { setSent(false); setEmail(""); }}
-            className="text-primary underline underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-            style={{ fontSize: "14px" }}
-          >
-            Use a different email
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100dvh-72px)] px-gutter py-section-padding">
-      <div className="w-full max-w-sm flex flex-col gap-8">
+    <div style={{
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "var(--spacing-section) var(--spacing-md)",
+    }}>
+      <div style={{
+        width: "100%",
+        maxWidth: 400,
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--spacing-xxl)",
+      }}>
+
         {/* Header */}
-        <div className="flex flex-col gap-2">
-          <h1
-            style={{ fontFamily: "var(--font-editorial)", fontSize: "48px", lineHeight: "1.1", letterSpacing: "-0.02em" }}
-            className="text-ink"
-          >
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-xs)" }}>
+          <h1 style={{
+            ...t.heading1,
+            fontFamily: "var(--font-editorial), 'Playfair Display', serif",
+            color: "var(--color-ink)",
+            margin: 0,
+          }}>
             Sign in
           </h1>
-          <p className="text-steel" style={{ fontSize: "20px", lineHeight: "1.6" }}>
-            No password required.
+          <p style={{ ...t.subtitle, color: "var(--color-steel)", margin: 0 }}>
+            Welcome back to Avolo.
           </p>
         </div>
 
         {/* Error banner */}
-        {errorMessage && (
+        {error && (
           <div
             role="alert"
-            className="flex items-start gap-2 bg-error-container border border-error rounded-xl px-4 py-3"
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "var(--spacing-xs)",
+              backgroundColor: "var(--color-error-container)",
+              border: "1px solid var(--color-error)",
+              borderRadius: "var(--rounded-md)",
+              padding: "var(--spacing-sm) var(--spacing-md)",
+            }}
           >
-            <span className="material-symbols-outlined text-error text-[18px] shrink-0 mt-0.5" aria-hidden="true">
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--color-error)", flexShrink: 0, marginTop: 1 }} aria-hidden="true">
               error
             </span>
-            <p className="text-error" style={{ fontSize: "14px", lineHeight: "1.5" }}>{errorMessage}</p>
+            <p style={{ ...t.bodySm, color: "var(--color-error)", margin: 0 }}>{error}</p>
           </div>
         )}
 
-        {/* Google sign-in */}
-        <Button
-          variant="secondary"
-          size="lg"
-          loading={googleLoading}
-          onClick={handleGoogleSignIn}
-          className="w-full gap-3"
-          type="button"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </Button>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4" aria-hidden="true">
-          <div className="flex-1 h-px bg-hairline" />
-          <span className="text-steel" style={{ fontSize: "12px", letterSpacing: "0.1em", fontWeight: 600, textTransform: "uppercase" }}>
-            or
-          </span>
-          <div className="flex-1 h-px bg-hairline" />
-        </div>
-
-        {/* Magic link form */}
-        <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4" noValidate>
+        {/* Credentials form */}
+        <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
           <Input
             label="Email address"
             type="email"
@@ -158,30 +140,97 @@ export function LoginForm() {
             inputMode="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             required
             disabled={loading}
           />
-          <Button
+          <Input
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Your password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            disabled={loading}
+          />
+
+          <button
             type="submit"
-            variant="primary"
-            size="lg"
-            loading={loading}
-            className="w-full"
-            disabled={!email.trim()}
+            disabled={!canSubmit}
+            style={{
+              ...t.buttonMd,
+              marginTop: "var(--spacing-xs)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--spacing-xs)",
+              width: "100%",
+              padding: "10px 20px",
+              backgroundColor: canSubmit ? "var(--color-primary)" : "var(--color-hairline)",
+              color: canSubmit ? "var(--color-on-primary)" : "var(--color-muted)",
+              border: "none",
+              borderRadius: "var(--rounded-md)",
+              cursor: canSubmit ? "pointer" : "not-allowed",
+              transition: "background-color 120ms",
+              minHeight: 44,
+            }}
           >
-            Send sign-in link
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_forward</span>
-          </Button>
+            {loading ? (
+              <span className="material-symbols-outlined" style={{ fontSize: 18, animation: "spin 1s linear infinite" }} aria-hidden="true">
+                progress_activity
+              </span>
+            ) : (
+              <>
+                Sign In
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">arrow_forward</span>
+              </>
+            )}
+          </button>
         </form>
 
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }} aria-hidden="true">
+          <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-hairline)" }} />
+          <span style={{ ...t.microUpper, color: "var(--color-steel)" }}>or</span>
+          <div style={{ flex: 1, height: 1, backgroundColor: "var(--color-hairline)" }} />
+        </div>
+
+        {/* Google */}
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={googleLoading}
+          style={{
+            ...t.buttonMd,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "var(--spacing-sm)",
+            width: "100%",
+            padding: "10px 20px",
+            backgroundColor: "var(--color-canvas)",
+            color: "var(--color-ink)",
+            border: "1px solid var(--color-hairline-strong)",
+            borderRadius: "var(--rounded-md)",
+            cursor: googleLoading ? "not-allowed" : "pointer",
+            opacity: googleLoading ? 0.6 : 1,
+            transition: "opacity 120ms",
+            minHeight: 44,
+          }}
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+
         {/* Legal */}
-        <p className="text-steel text-center" style={{ fontSize: "12px", lineHeight: "1.5" }}>
+        <p style={{ ...t.caption, color: "var(--color-steel)", textAlign: "center", margin: 0 }}>
           By signing in you agree to our{" "}
-          <a href="/terms" className="text-primary underline underline-offset-1 hover:opacity-80">Terms</a>
+          <a href="/terms" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Terms</a>
           {" "}and{" "}
-          <a href="/privacy" className="text-primary underline underline-offset-1 hover:opacity-80">Privacy Policy</a>.
+          <a href="/privacy" style={{ color: "var(--color-primary)", textDecoration: "underline" }}>Privacy Policy</a>.
         </p>
+
       </div>
     </div>
   );

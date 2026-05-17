@@ -21,7 +21,7 @@ export default function ExploreStep3Page() {
     <StepWrapper
       step={3}
       totalSteps={5}
-      title="When are you going?"
+      title="When do you want to travel?"
       subtitle={isOneWay ? "Pick your departure date." : "Pick your departure and return dates."}
       onBack={() => router.push("/explore/services")}
       onNext={() => router.push("/explore/travelers")}

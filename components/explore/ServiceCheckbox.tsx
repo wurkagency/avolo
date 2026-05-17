@@ -7,14 +7,13 @@ interface ServiceOption {
   value: ServiceType;
   icon: string;
   label: string;
-  sub: string;
 }
 
 const SERVICES: ServiceOption[] = [
-  { value: "FLIGHT", icon: "flight", label: "Flights", sub: "Search all airlines" },
-  { value: "HOTEL", icon: "hotel", label: "Hotels", sub: "Best available rates" },
-  { value: "CAR", icon: "directions_car", label: "Car rental", sub: "Pick up at destination" },
-  { value: "EXCURSION", icon: "tour", label: "Excursions", sub: "Tours & activities" },
+  { value: "FLIGHT",    icon: "flight",         label: "Find Cheap Flights" },
+  { value: "HOTEL",     icon: "hotel",           label: "Discover Hotels" },
+  { value: "CAR",       icon: "directions_car",  label: "Rent a Car" },
+  { value: "EXCURSION", icon: "explore",         label: "Explore Excursions" },
 ];
 
 interface ServiceCheckboxProps {
@@ -27,12 +26,11 @@ export function ServiceCheckbox({ selected, onChange }: ServiceCheckboxProps) {
     const next = selected.includes(value)
       ? selected.filter((s) => s !== value)
       : [...selected, value];
-    // Require at least one service
     if (next.length > 0) onChange(next);
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {SERVICES.map((svc) => {
         const active = selected.includes(svc.value);
         return (
@@ -42,31 +40,41 @@ export function ServiceCheckbox({ selected, onChange }: ServiceCheckboxProps) {
             onClick={() => toggle(svc.value)}
             aria-pressed={active}
             className={cn(
-              "flex flex-col gap-2 p-5 rounded-lg border-2 text-left transition-all",
+              "flex flex-col items-start gap-3 px-4 py-4 rounded-lg border-2 text-left transition-all",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               active
-                ? "border-primary bg-cream-light text-ink-tint"
-                : "border-hairline bg-surface hover:border-primary text-ink",
+                ? "border-primary bg-cream-light"
+                : "border-hairline bg-canvas hover:border-primary",
             )}
           >
-            <span
-              className={cn("material-symbols-outlined text-[28px]", active ? "text-primary" : "text-steel")}
-              style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
-              aria-hidden="true"
-            >
-              {svc.icon}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span style={{ fontFamily: "var(--font-inter)", fontSize: "16px", fontWeight: 600, lineHeight: "1.4" }}>
-                {svc.label}
-              </span>
+            <div className="flex items-center justify-between w-full">
               <span
-                className="text-steel"
-                style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
+                className={cn("material-symbols-outlined", active ? "text-primary" : "text-steel")}
+                style={{ fontSize: 22, fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
+                aria-hidden="true"
               >
-                {svc.sub}
+                {svc.icon}
+              </span>
+              {/* Checkbox indicator */}
+              <span
+                className={cn(
+                  "flex items-center justify-center w-5 h-5 rounded border-2 transition-colors shrink-0",
+                  active
+                    ? "bg-primary border-primary text-white"
+                    : "border-hairline-strong bg-canvas",
+                )}
+              >
+                {active && (
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }} aria-hidden="true">check</span>
+                )}
               </span>
             </div>
+            <span
+              className="text-ink"
+              style={{ fontFamily: "var(--font-inter)", fontSize: "13px", fontWeight: 500, lineHeight: "1.4" }}
+            >
+              {svc.label}
+            </span>
           </button>
         );
       })}

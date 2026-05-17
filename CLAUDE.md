@@ -33,3 +33,11 @@ Canvas white: #ffffff
 
 ## Visual Review
 After any UI work → invoke the design-review skill
+
+## Approved (do not restyle)
+- tokens.css ✅
+- AppShell ✅
+- Sidebar ✅
+- WelcomeHero ✅
+- InputBar ✅
+- SunsetStripeBand ✅

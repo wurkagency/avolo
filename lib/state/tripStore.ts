@@ -8,24 +8,32 @@ import {
   defaultTripDraft,
 } from "@/types/trip";
 
+interface TripWizardMeta {
+  /** Fields explicitly resolved by the AI on the last interpret-query call. */
+  lastFilledFields: (keyof TripDraft)[];
+}
+
 interface TripActions {
   setDeparture: (v: TripDestination | null) => void;
   setDestination: (v: TripDestination | null) => void;
   toggleService: (s: ServiceType) => void;
   setServices: (services: ServiceType[]) => void;
   setDates: (departureDate: string, returnDate: string | null, isOneWay: boolean) => void;
+  setIsOneWay: (isOneWay: boolean) => void;
   setFlexibility: (f: Flexibility) => void;
   setTravelers: (adults: number, children: number[], hasDisability: boolean) => void;
   setLuggage: (handLuggage: number, checkedLuggage: number, specialLuggage: boolean) => void;
+  setLastFilledFields: (fields: (keyof TripDraft)[]) => void;
   reset: () => void;
 }
 
-export type TripStore = TripDraft & TripActions;
+export type TripStore = TripDraft & TripWizardMeta & TripActions;
 
 export const useTripStore = create<TripStore>()(
   persist(
     (set) => ({
       ...defaultTripDraft,
+      lastFilledFields: [] as (keyof TripDraft)[],
 
       setDeparture: (v) => set({ departure: v }),
 
@@ -48,6 +56,9 @@ export const useTripStore = create<TripStore>()(
       setDates: (departureDate, returnDate, isOneWay) =>
         set({ departureDate, returnDate: isOneWay ? null : returnDate, isOneWay }),
 
+      setIsOneWay: (isOneWay) =>
+        set(isOneWay ? { isOneWay, returnDate: null } : { isOneWay }),
+
       setFlexibility: (flexibility) => set({ flexibility }),
 
       setTravelers: (adults, children, hasDisability) =>
@@ -56,7 +67,9 @@ export const useTripStore = create<TripStore>()(
       setLuggage: (handLuggage, checkedLuggage, specialLuggage) =>
         set({ handLuggage, checkedLuggage, specialLuggage }),
 
-      reset: () => set(defaultTripDraft),
+      setLastFilledFields: (fields) => set({ lastFilledFields: fields }),
+
+      reset: () => set({ ...defaultTripDraft, lastFilledFields: [] }),
     }),
     {
       name: "avolo-trip-draft",
@@ -86,6 +99,7 @@ export const useTripStore = create<TripStore>()(
         handLuggage: state.handLuggage,
         checkedLuggage: state.checkedLuggage,
         specialLuggage: state.specialLuggage,
+        lastFilledFields: state.lastFilledFields,
       }),
     },
   ),

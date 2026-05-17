@@ -5,6 +5,8 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
 import Nodemailer from "next-auth/providers/nodemailer";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/server/db";
 import { authConfig } from "@/lib/server/auth.config";
 
@@ -14,6 +16,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
 
   providers: [
+    Credentials({
+      credentials: { email: {}, password: {} },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const email    = String(credentials.email).trim().toLowerCase();
+        const password = String(credentials.password);
+        if (password.length > 128) return null;
+
+        const user = await db.user.findUnique({
+          where: { email },
+          select: { id: true, email: true, name: true, image: true, password: true },
+        });
+
+        if (!user?.password) return null;
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) return null;
+
+        return { id: user.id, email: user.email, name: user.name, image: user.image };
+      },
+    }),
+
     Google({
       clientId: process.env.AUTH_GOOGLE_ID ?? "",
       clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
@@ -57,19 +80,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         const dbUser = await db.user.findUnique({
           where: { id: user.id },
-          select: { id: true, role: true, currency: true, language: true },
+          select: { id: true, role: true, currency: true, language: true, image: true },
         });
         token.id = user.id;
         token.role = dbUser?.role ?? "USER";
         token.currency = dbUser?.currency ?? "EUR";
         token.language = dbUser?.language ?? "EN";
+        token.picture = dbUser?.image ?? user.image ?? null;
       }
 
       if (trigger === "update" && updateSession) {
-        const update = updateSession as { currency?: string; language?: string; name?: string };
+        const update = updateSession as { currency?: string; language?: string; name?: string; image?: string | null };
         if (update.currency) token.currency = update.currency;
         if (update.language) token.language = update.language;
         if (update.name) token.name = update.name;
+        if ("image" in update) token.picture = update.image ?? null;
       }
 
       return token;

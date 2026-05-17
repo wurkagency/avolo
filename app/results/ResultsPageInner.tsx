@@ -99,7 +99,7 @@ export function ResultsPageInner() {
 
   if (tripLoading || isPolling) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-12">
+      <main className="mx-auto max-w-3xl px-4 py-12">
         <div className="flex items-center gap-3 text-steel">
           <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>{isPolling ? "Search in progress…" : "Loading…"}</span>
@@ -116,18 +116,25 @@ export function ResultsPageInner() {
   const destinationName = trip?.destinationName ?? storeDestination?.name ?? "";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-ink">
-          {departureName && destinationName
-            ? `${departureName} → ${destinationName}`
-            : "Your trip results"}
-        </h1>
-        <p className="text-steel mt-1 text-sm">
-          {isDone
-            ? `${Object.values(results).flat().length} results found`
-            : "Searching across providers…"}
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mb-10">
+        <p
+          className="text-stone uppercase tracking-widest mb-2"
+          style={{ fontFamily: "var(--font-inter)", fontSize: "11px", fontWeight: 600, letterSpacing: "1px" }}
+        >
+          {departureName && destinationName ? `${departureName} → ${destinationName}` : "Your search"}
         </p>
+        <h1
+          className="text-ink"
+          style={{ fontFamily: "var(--font-editorial)", fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 400, lineHeight: 1.1, letterSpacing: "-0.02em" }}
+        >
+          We found these results for you
+        </h1>
+        {!isDone && (
+          <p className="text-steel mt-2" style={{ fontFamily: "var(--font-inter)", fontSize: "14px" }}>
+            Searching across providers…
+          </p>
+        )}
       </div>
 
       {!isComplete && (

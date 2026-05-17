@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { useUserStore } from "@/lib/state/userStore";
 import { useUiStore } from "@/lib/state/uiStore";
@@ -49,15 +50,66 @@ export default function SettingsPage() {
   const [language, setLanguageLocal] = useState<Language>((session?.user as { language?: string })?.language as Language ?? storeLanguage);
 
   const [savingName, setSavingName] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [removingImage, setRemovingImage] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(session?.user?.image ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // Sync name from session when it loads
+  // Sync name and image from session when it loads
   useEffect(() => {
     if (session?.user?.name) setName(session.user.name);
   }, [session?.user?.name]);
+
+  useEffect(() => {
+    setAvatarSrc(session?.user?.image ?? null);
+  }, [session?.user?.image]);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      addToast("Image must be 5 MB or smaller", "error");
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/profile/avatar", { method: "POST", body: form });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Upload failed" })) as { error?: string };
+        throw new Error(body.error ?? "Upload failed");
+      }
+      const data = await res.json() as { image: string };
+      setAvatarSrc(data.image);
+      await updateSession({ image: data.image });
+      addToast("Profile photo updated", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Upload failed", "error");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setRemovingImage(true);
+    try {
+      const res = await fetch("/api/profile/avatar", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove photo");
+      setAvatarSrc(null);
+      await updateSession({ image: null });
+      addToast("Profile photo removed", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to remove photo", "error");
+    } finally {
+      setRemovingImage(false);
+    }
+  }
 
   async function saveName() {
     if (!name.trim()) return;
@@ -170,6 +222,83 @@ export default function SettingsPage() {
             {savingName ? "Saving…" : "Save"}
           </button>
         </div>
+      </section>
+
+      {/* Profile Image */}
+      <section className="flex flex-col gap-4 rounded-lg border border-hairline p-6">
+        <h2 className="text-base font-semibold text-ink">Profile image</h2>
+
+        <div className="flex items-center gap-5">
+          {/* Avatar preview */}
+          <div style={{
+            width: 80,
+            height: 80,
+            borderRadius: "var(--rounded-full)",
+            overflow: "hidden",
+            flexShrink: 0,
+            backgroundColor: "var(--color-hairline-soft)",
+            border: "2px solid var(--color-hairline)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+          }}>
+            {avatarSrc ? (
+              <Image
+                src={avatarSrc}
+                alt="Profile photo"
+                fill
+                sizes="80px"
+                style={{ objectFit: "cover" }}
+                unoptimized
+              />
+            ) : (
+              <span style={{ fontSize: 28, fontWeight: 600, color: "var(--color-steel)", lineHeight: 1 }}>
+                {(session?.user?.name ?? session?.user?.email ?? "U").charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleAvatarUpload}
+              aria-label="Upload profile photo"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage || removingImage}
+              className="flex items-center gap-2 rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
+            >
+              <span
+                className="material-symbols-outlined text-base"
+                aria-hidden="true"
+                style={uploadingImage ? { animation: "spin 1s linear infinite" } : undefined}
+              >
+                {uploadingImage ? "progress_activity" : "upload"}
+              </span>
+              {uploadingImage ? "Uploading…" : "Upload photo"}
+            </button>
+            {avatarSrc && (
+              <button
+                onClick={handleAvatarRemove}
+                disabled={uploadingImage || removingImage}
+                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-steel hover:bg-surface transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
+                {removingImage ? "Removing…" : "Remove photo"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <p style={{ fontSize: 12, color: "var(--color-stone)", margin: 0 }}>
+          JPEG, PNG, WebP or GIF · max 5 MB · displayed at 256 × 256 px
+        </p>
       </section>
 
       {/* Currency & Language */}

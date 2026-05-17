@@ -35,6 +35,17 @@
   dialog::backdrop {
     background: transparent;
   }
+
+  /* Placeholder colour from design token */
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes slideInFromRight {

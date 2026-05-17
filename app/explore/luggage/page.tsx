@@ -59,7 +59,7 @@ export default function ExploreStep5Page() {
     <StepWrapper
       step={5}
       totalSteps={5}
-      title="Luggage?"
+      title="Will you bring luggage?"
       subtitle="Tell us what you're bringing so we can filter fares accurately."
       onBack={() => router.push("/explore/travelers")}
       isLast
@@ -76,7 +76,7 @@ export default function ExploreStep5Page() {
         onChangeSpecial={(v) => setLuggage(handLuggage, checkedLuggage, v)}
       />
       {submitError && (
-        <p className="mt-3 text-sm text-red-600">{submitError}</p>
+        <p className="mt-3 text-sm text-error">{submitError}</p>
       )}
     </StepWrapper>
   );
