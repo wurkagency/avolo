@@ -8,6 +8,7 @@
 #   - MySQL is running and a database/user already exist (Plesk MySQL)
 #   - Git is installed and repo is cloned to APP_DIR
 #   - .env file exists at APP_DIR (copy from .env.example and fill in secrets)
+#   - .env values use KEY="value" format with no inline comments after values
 #
 # Usage:
 #   ssh user@avolo.app
@@ -32,11 +33,12 @@ die()   { echo -e "\033[1;31mERROR:\033[0m $*" >&2; exit 1; }
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
 info "[pre-flight] Checking environment"
 
-NODE_VERSION=$(node -e "console.log(process.version.slice(1).split('.')[0])" 2>/dev/null) || die "Node.js not found. Install Node.js $NODE_MIN_VERSION+ first."
+NODE_VERSION=$(node -e "console.log(process.version.slice(1).split('.')[0])" 2>/dev/null) \
+  || die "Node.js not found. Install Node.js $NODE_MIN_VERSION+ first."
 if [ "$NODE_VERSION" -lt "$NODE_MIN_VERSION" ]; then
   die "Node.js $NODE_VERSION found but $NODE_MIN_VERSION+ required."
 fi
-ok "Node.js v$(node -v | tr -d 'v') ($(which node))"
+ok "Node.js $(node -v)"
 
 npm --version > /dev/null 2>&1 || die "npm not found."
 ok "npm $(npm -v)"
@@ -98,7 +100,9 @@ fi
 # ── Step 4: Seed airports ─────────────────────────────────────────────────────
 info "[4/8] Seeding airport data"
 if [ -f "source/airports.csv" ] && [ -f "db/seed.ts" ]; then
-  npm run db:seed && ok "Airport data seeded" || warn "Seed failed or skipped — continuing."
+  # Hard fail on seed error during first deploy — partial seed = broken airport search.
+  npm run db:seed
+  ok "Airport data seeded"
 else
   warn "source/airports.csv or db/seed.ts not found — skipping seed."
 fi
@@ -111,36 +115,44 @@ ok "Build complete"
 # ── Step 6: Copy static assets into standalone output ────────────────────────
 info "[6/8] Copying static assets into standalone output"
 rm -rf .next/standalone/.next/static .next/standalone/public
-cp -r .next/static  .next/standalone/.next/static
-cp -r public         .next/standalone/public
+cp -r .next/static   .next/standalone/.next/static
+cp -r public          .next/standalone/public
 ok "Static assets copied"
 
 # ── Step 7: Start application with PM2 ───────────────────────────────────────
 info "[7/8] Starting application with PM2"
 
-# Export env vars from .env so PM2 picks them up
-set -a; source .env; set +a
+# Load .env into this shell's environment so PM2 inherits them on start.
+# Requires values to be shell-safe (KEY="value", no inline # comments after values).
+set -a
+# shellcheck disable=SC1091
+source .env
+set +a
 
-# Stop any existing process with this name
+# PORT and HOSTNAME are read from process.env by Next.js standalone — not CLI args.
+PORT="${PORT:-3000}"
+HOSTNAME="${HOSTNAME:-0.0.0.0}"
+
+# Stop any existing process with this name before starting fresh
 pm2 delete "$APP_NAME" 2>/dev/null || true
-
-PORT=${PORT:-3000}
-HOSTNAME=${HOSTNAME:-0.0.0.0}
 
 pm2 start .next/standalone/server.js \
   --name "$APP_NAME" \
-  --interpreter node \
-  --env production \
-  -- --port "$PORT" --hostname "$HOSTNAME"
+  --interpreter node
 
 pm2 save
-ok "Application started on port $PORT (PM2 process: $APP_NAME)"
+ok "Application started (PM2 process: $APP_NAME, port: $PORT)"
 
 # ── Step 8: Persist PM2 across reboots ───────────────────────────────────────
 info "[8/8] Configuring PM2 startup"
-pm2 startup | tail -1
-echo ""
-warn "IMPORTANT: Copy the 'sudo env ...' command above and run it as root to enable PM2 auto-start on reboot."
+STARTUP_CMD=$(pm2 startup | grep "sudo env" || true)
+if [ -n "$STARTUP_CMD" ]; then
+  echo ""
+  echo "  Run this command as root to enable PM2 auto-start on reboot:"
+  echo "  $STARTUP_CMD"
+else
+  pm2 startup
+fi
 echo ""
 
 ok "First-time deployment complete!"
@@ -151,7 +163,8 @@ echo "  Logs:     pm2 logs $APP_NAME"
 echo "  Restart:  pm2 restart $APP_NAME --update-env"
 echo ""
 echo "Next steps:"
-echo "  1. In Plesk: set the Node.js app document root to $APP_DIR"
-echo "     and configure Nginx to proxy :80/:443 → localhost:$PORT"
-echo "  2. Enable SSL via Plesk Let's Encrypt (free certificate)"
-echo "  3. Set up Plesk cron: POST https://avolo.app/api/cron -H 'x-cron-secret: \$CRON_SECRET'"
+echo "  1. Run the 'sudo env ...' startup command above as root"
+echo "  2. In Plesk: configure Nginx to reverse-proxy :80/:443 → localhost:$PORT"
+echo "  3. Enable SSL via Plesk Let's Encrypt"
+echo "  4. Set up Plesk cron: POST https://avolo.app/api/cron -H 'x-cron-secret: \$CRON_SECRET'"
+echo "  5. Create admin user: ADMIN_EMAIL=you@avolo.app ADMIN_PASSWORD=... npx ts-node scripts/seed-admin.ts"
