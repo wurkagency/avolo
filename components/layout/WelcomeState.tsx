@@ -252,13 +252,25 @@ function HomeInput() {
     recognition.onerror = (event) => {
       setIsListening(false);
       if (event.error === "not-allowed") {
-        // Show modal post-hoc; async is fine here since we're already in an error callback.
         void navigator.permissions
           .query({ name: "microphone" as PermissionName })
-          .then((p) => setMicPermState(p.state === "denied" ? "denied" : "prompt"))
-          .catch(() => setMicPermState("prompt"))
-          .finally(() => setShowMicModal(true));
-      } else if (event.error !== "aborted" && event.error !== "no-speech") {
+          .then((p) => {
+            if (p.state === "granted") {
+              // Browser permission is granted but the API is blocked — this is a
+              // Permissions-Policy header issue. Show a toast instead of an infinite modal loop.
+              addToast("Microphone is blocked by the page configuration. A site update is required.", "error");
+            } else {
+              setMicPermState(p.state === "denied" ? "denied" : "prompt");
+              setShowMicModal(true);
+            }
+          })
+          .catch(() => {
+            setMicPermState("prompt");
+            setShowMicModal(true);
+          });
+      } else if (event.error === "no-speech") {
+        addToast("No speech detected — try again", "info");
+      } else if (event.error !== "aborted") {
         addToast(`Microphone error: ${event.error}`, "error");
       }
     };

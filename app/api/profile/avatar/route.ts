@@ -10,12 +10,18 @@ import { db } from "@/lib/server/db";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const AVATAR_DIR = path.join(process.cwd(), "public", "avatars");
 
-function avatarPath(userId: string): string {
-  // path.basename strips any directory traversal from the id
-  const safe = path.basename(userId).replace(/[^a-zA-Z0-9_-]/g, "");
-  return path.join(AVATAR_DIR, `${safe}.webp`);
+// In standalone mode process.cwd() is the standalone dir. APP_ROOT lets the
+// server override this explicitly so uploads land in the right place.
+const APP_ROOT = process.env.APP_ROOT ?? process.cwd();
+const AVATAR_DIR = path.join(APP_ROOT, "public", "avatars");
+
+function safeUserId(userId: string): string {
+  return path.basename(userId).replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
+function avatarFilePath(userId: string): string {
+  return path.join(AVATAR_DIR, `${safeUserId(userId)}.webp`);
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -48,15 +54,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Could not process image — make sure it is a valid image file" }, { status: 422 });
   }
 
-  await mkdir(AVATAR_DIR, { recursive: true });
-  await writeFile(avatarPath(session.user.id), webp);
+  const safeId  = safeUserId(session.user.id);
+  const imageUrl = `/avatars/${safeId}.webp?v=${Date.now()}`;
 
-  const imageUrl = `/avatars/${session.user.id}.webp?v=${Date.now()}`;
+  try {
+    await mkdir(AVATAR_DIR, { recursive: true });
+    await writeFile(avatarFilePath(session.user.id), webp);
+  } catch (err) {
+    console.error("[avatar] write failed:", err);
+    return NextResponse.json({ error: "Failed to save image — check server write permissions" }, { status: 500 });
+  }
 
-  await db.user.update({
-    where: { id: session.user.id },
-    data: { image: imageUrl },
-  });
+  try {
+    await db.user.update({
+      where: { id: session.user.id },
+      data: { image: imageUrl },
+    });
+  } catch (err) {
+    console.error("[avatar] db update failed:", err);
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+  }
 
   return NextResponse.json({ image: imageUrl });
 }
@@ -65,7 +82,7 @@ export async function DELETE(): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await unlink(avatarPath(session.user.id)).catch(() => null);
+  await unlink(avatarFilePath(session.user.id)).catch(() => null);
 
   await db.user.update({
     where: { id: session.user.id },
