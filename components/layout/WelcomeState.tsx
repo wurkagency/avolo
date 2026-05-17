@@ -130,12 +130,18 @@ function HomeInput() {
     setMicSupported(getSpeechRecognitionCtor() !== null);
   }, []);
 
-  // Resize textarea whenever value changes (covers both keyboard input and speech).
+  // Sync rawQuery from store on every (re)mount so "Edit query" always restores
+  // the last typed text even when Next.js router cache keeps the component alive.
+  useEffect(() => {
+    setValue(useTripStore.getState().rawQuery);
+  }, []);
+
+  // Resize textarea whenever value changes; enforce 2-row minimum (52px).
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    el.style.height = Math.min(Math.max(el.scrollHeight, 52), 200) + "px";
   }, [value]);
 
   // Stop any active recognition when the component unmounts.
@@ -222,7 +228,7 @@ function HomeInput() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    el.style.height = Math.min(Math.max(el.scrollHeight, 52), 200) + "px";
   }
 
   // Must remain synchronous — Chrome requires recognition.start() to be called
@@ -301,11 +307,36 @@ function HomeInput() {
     doStartRecognition();
   }
 
-  function handleMic() {
+  // Request mic permission via getUserMedia before invoking SpeechRecognition so the
+  // browser shows its native permission dialog. Without this, Chrome silently fires
+  // not-allowed when the page hasn't been granted mic access yet.
+  async function handleMic() {
     if (isListening) {
       recognitionRef.current?.stop();
       return;
     }
+
+    if ("mediaDevices" in navigator) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Release immediately — we only needed the permission grant
+        stream.getTracks().forEach((t) => t.stop());
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "NotAllowedError") {
+          void navigator.permissions
+            .query({ name: "microphone" as PermissionName })
+            .then((p) => {
+              setMicPermState(p.state === "denied" ? "denied" : "prompt");
+              setShowMicModal(true);
+            })
+            .catch(() => { setMicPermState("prompt"); setShowMicModal(true); });
+        } else {
+          addToast("Microphone not available — check browser settings", "error");
+        }
+        return;
+      }
+    }
+
     doStartRecognition();
   }
 
@@ -430,7 +461,7 @@ function HomeInput() {
         {micSupported && (
           <button
             type="button"
-            onClick={handleMic}
+            onClick={() => void handleMic()}
             disabled={loading}
             aria-label={isListening ? "Stop recording" : "Start voice input"}
             aria-pressed={isListening}
