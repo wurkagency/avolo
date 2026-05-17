@@ -75,8 +75,6 @@ function Chip({ label, icon, href }: { label: string; icon: string; href: string
 }
 
 // ─── Speech recognition ───────────────────────────────────────────────────────
-// Minimal local types so we don't depend on whether the project's DOM lib
-// version includes the Speech Recognition API.
 
 interface SpeechAlt       { readonly transcript: string }
 interface SpeechResult    { readonly length: number; readonly [i: number]: SpeechAlt }
@@ -107,38 +105,53 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-// ─── Embedded conversational input ───────────────────────────────────────────
+// ─── Textarea auto-resize ─────────────────────────────────────────────────────
+
+const MIN_TEXTAREA_H = 52; // ~2 lines at 16px / 1.55 line-height
+const MAX_TEXTAREA_H = 200;
+
+function applyResize(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = Math.min(Math.max(el.scrollHeight, MIN_TEXTAREA_H), MAX_TEXTAREA_H) + "px";
+}
+
+// ─── HomeInput ────────────────────────────────────────────────────────────────
 
 function HomeInput() {
   const router     = useRouter();
   const addToast   = useUiStore((s) => s.addToast);
 
-  // Pre-populate from the last raw query so "Edit query" restores what the user typed.
-  const [value,        setValue]       = useState(() => useTripStore.getState().rawQuery);
+  const [value,        setValue]       = useState("");
   const [focused,      setFocused]     = useState(false);
   const [loading,      setLoading]     = useState(false);
   const [isListening,  setIsListening] = useState(false);
   const [showMicModal, setShowMicModal] = useState(false);
   const [micPermState, setMicPermState] = useState<"prompt" | "denied">("prompt");
-  // Detect mic support after mount (window not available on server).
   const [micSupported, setMicSupported] = useState(false);
+
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const micRetryRef    = useRef(false);
 
+  // Detect mic support (window not available on server)
   useEffect(() => {
     setMicSupported(getSpeechRecognitionCtor() !== null);
   }, []);
 
-  // Resize textarea whenever value changes (covers both keyboard input and speech).
+  // Sync rawQuery from store on (re)mount.
+  // Handles both fresh mounts and Next.js router-cache soft navigations
+  // so that "Edit query" always restores what the user typed.
+  useEffect(() => {
+    const q = useTripStore.getState().rawQuery;
+    setValue(q);
+  }, []);
+
+  // Auto-resize whenever value changes (covers voice input and programmatic changes)
   useEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    if (el) applyResize(el);
   }, [value]);
 
-  // Stop any active recognition when the component unmounts.
+  // Stop recognition on unmount
   useEffect(() => {
     return () => { recognitionRef.current?.stop(); };
   }, []);
@@ -163,8 +176,8 @@ function HomeInput() {
 
       const parsed = await res.json() as ParsedQuery;
 
-      // Clear any stale trip data from a previous search before applying the new query.
-      // Without this, old fields (e.g. previous departure airport) bleed into the new search.
+      // Always reset before applying AI results to eliminate stale data from
+      // previous searches (e.g. old departure airport bleeding into new query).
       const store = useTripStore.getState();
       store.reset();
       store.setRawQuery(q);
@@ -220,13 +233,11 @@ function HomeInput() {
 
   function handleInput() {
     const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
+    if (el) applyResize(el);
   }
 
-  // Must remain synchronous — Chrome requires recognition.start() to be called
-  // within the same user gesture call stack, or it throws a not-allowed error.
+  // ── Mic helpers ─────────────────────────────────────────────────────────────
+
   function doStartRecognition() {
     const SR = getSpeechRecognitionCtor();
     if (!SR) {
@@ -241,37 +252,25 @@ function HomeInput() {
     recognition.interimResults = true;
     recognition.lang           = navigator.language || "en-US";
 
-    recognition.onstart = () => { micRetryRef.current = false; setIsListening(true); };
+    recognition.onstart = () => setIsListening(true);
 
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .slice(event.resultIndex)
-        .map((r) => r[0]?.transcript ?? "")
-        .join("");
-      setValue(transcript);
+      const parts: string[] = [];
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        parts.push(result?.[0]?.transcript ?? "");
+      }
+      setValue(parts.join(""));
     };
 
     recognition.onerror = (event) => {
       setIsListening(false);
       if (event.error === "not-allowed") {
-        const wasRetry = micRetryRef.current;
-        micRetryRef.current = false;
         void navigator.permissions
           .query({ name: "microphone" as PermissionName })
           .then((p) => {
-            // Two cases mean Permissions-Policy is blocking the API:
-            // 1. Browser says "granted" but recognition still fired not-allowed.
-            // 2. This was a retry from our Allow button yet still got not-allowed —
-            //    meaning the browser never showed its native dialog (policy blocked it).
-            if (p.state === "granted" || wasRetry) {
-              addToast(
-                "Microphone blocked. In your browser address bar click the lock icon → Permissions → Microphone → Allow.",
-                "error",
-              );
-            } else {
-              setMicPermState(p.state === "denied" ? "denied" : "prompt");
-              setShowMicModal(true);
-            }
+            setMicPermState(p.state === "denied" ? "denied" : "prompt");
+            setShowMicModal(true);
           })
           .catch(() => {
             setMicPermState("prompt");
@@ -295,22 +294,56 @@ function HomeInput() {
     }
   }
 
-  function handleMicAllow() {
-    setShowMicModal(false);
-    micRetryRef.current = true;
-    doStartRecognition();
-  }
-
-  function handleMic() {
+  // Ask for mic permission via getUserMedia first — this shows the browser's native
+  // permission dialog before SpeechRecognition.start() is called, which prevents
+  // silent failures when the browser hasn't been asked for microphone access yet.
+  async function handleMic() {
     if (isListening) {
       recognitionRef.current?.stop();
       return;
     }
+
+    if (!("mediaDevices" in navigator)) {
+      doStartRecognition();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immediately release tracks — we only needed the permission grant
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "NotAllowedError") {
+        void navigator.permissions
+          .query({ name: "microphone" as PermissionName })
+          .then((p) => {
+            setMicPermState(p.state === "denied" ? "denied" : "prompt");
+            setShowMicModal(true);
+          })
+          .catch(() => {
+            setMicPermState("prompt");
+            setShowMicModal(true);
+          });
+      } else {
+        addToast("Microphone not available — check browser settings", "error");
+      }
+      return;
+    }
+
+    doStartRecognition();
+  }
+
+  function handleMicAllow() {
+    setShowMicModal(false);
     doStartRecognition();
   }
 
   const hasText = value.trim().length > 0;
   const canSend = hasText && !loading;
+
+  // Use a consistent 2px border in both states to prevent layout shift when
+  // focus changes (1px → 2px would shift sibling elements).
+  const borderColor = focused ? "var(--color-primary)" : "var(--color-hairline-strong)";
 
   return (
     <>
@@ -319,9 +352,7 @@ function HomeInput() {
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        border: focused
-          ? "2px solid var(--color-primary)"
-          : "1px solid var(--color-hairline-strong)",
+        border: `2px solid ${borderColor}`,
         borderRadius: "var(--rounded-lg)",
         backgroundColor: "var(--color-canvas)",
         overflow: "hidden",
@@ -372,8 +403,8 @@ function HomeInput() {
             backgroundColor: "transparent",
             color: "var(--color-ink)",
             fontFamily: "inherit",
-            minHeight: 52,
-            maxHeight: 200,
+            minHeight: MIN_TEXTAREA_H,
+            maxHeight: MAX_TEXTAREA_H,
             lineHeight: 1.55,
             opacity: loading ? 0.6 : 1,
           }}
@@ -426,11 +457,11 @@ function HomeInput() {
 
         <div style={{ flex: 1 }} />
 
-        {/* Mic button — only shown when Web Speech API is available (not iOS Safari) */}
+        {/* Mic button — only shown when Web Speech API is available */}
         {micSupported && (
           <button
             type="button"
-            onClick={handleMic}
+            onClick={() => void handleMic()}
             disabled={loading}
             aria-label={isListening ? "Stop recording" : "Start voice input"}
             aria-pressed={isListening}
@@ -440,20 +471,20 @@ function HomeInput() {
               borderRadius:    "var(--rounded-md)",
               border:          "none",
               cursor:          loading ? "not-allowed" : "pointer",
-              backgroundColor: "var(--color-primary)",
-              color:           "var(--color-on-primary)",
+              backgroundColor: isListening ? "var(--color-primary)" : "var(--color-surface)",
+              color:           isListening ? "var(--color-on-primary)" : "var(--color-steel)",
               display:         "flex",
               alignItems:      "center",
               justifyContent:  "center",
               flexShrink:      0,
               opacity:         loading ? 0.5 : 1,
               animation:       isListening ? "mic-pulse 1.4s ease-in-out infinite" : "none",
-              transition:      "opacity 120ms",
+              transition:      "background-color 120ms, color 120ms, opacity 120ms",
             }}
           >
             <span
               className="material-symbols-outlined"
-              style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}
+              style={{ fontSize: 18, fontVariationSettings: isListening ? "'FILL' 1" : "'FILL' 0" }}
               aria-hidden="true"
             >
               {isListening ? "mic_off" : "mic"}
@@ -461,7 +492,7 @@ function HomeInput() {
           </button>
         )}
 
-        {/* Send button — dark styling */}
+        {/* Send button */}
         <button
           type="button"
           onClick={() => void handleSend()}
@@ -485,7 +516,6 @@ function HomeInput() {
         >
           {loading ? (
             <span
-              className="animate-spin"
               style={{
                 display:         "inline-block",
                 width:           16,
@@ -493,6 +523,7 @@ function HomeInput() {
                 border:          "2px solid currentColor",
                 borderTopColor:  "transparent",
                 borderRadius:    "50%",
+                animation:       "spin 0.8s linear infinite",
               }}
             />
           ) : (
@@ -509,7 +540,7 @@ function HomeInput() {
 
       <style>{`
         @keyframes mic-pulse {
-          0%   { box-shadow: 0 0 0 0   rgba(250, 82, 15, 0.08); }
+          0%   { box-shadow: 0 0 0 0   rgba(250, 82, 15, 0.35); }
           70%  { box-shadow: 0 0 0 8px transparent; }
           100% { box-shadow: 0 0 0 0   transparent; }
         }
