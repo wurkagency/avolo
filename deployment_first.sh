@@ -89,6 +89,14 @@ for VAR in DATABASE_URL AUTH_SECRET AUTH_URL; do
   fi
 done
 
+# APP_ROOT must point to the standalone dir so avatar uploads land where
+# Next.js standalone can serve them (process.cwd() is the PM2 launch dir, not standalone/).
+APP_ROOT_VAL=$(grep -E "^APP_ROOT=" .env | cut -d= -f2- | tr -d '"' || true)
+if [ -z "$APP_ROOT_VAL" ]; then
+  warn "APP_ROOT not set in .env — profile image uploads will be broken in production."
+  warn "Add: APP_ROOT=\"$APP_DIR/.next/standalone\""
+fi
+
 # ── Install PM2 if missing ────────────────────────────────────────────────────
 if ! command -v pm2 &> /dev/null; then
   info "[0/8] Installing PM2 globally"
@@ -142,6 +150,7 @@ info "[6/8] Copying static assets into standalone output"
 rm -rf .next/standalone/.next/static .next/standalone/public
 cp -r .next/static   .next/standalone/.next/static
 cp -r public          .next/standalone/public
+mkdir -p .next/standalone/public/avatars
 ok "Static assets copied"
 
 # Create a _next/static symlink at the webroot so Nginx can serve CSS/JS

@@ -11,8 +11,14 @@ import { db } from "@/lib/server/db";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-// In standalone mode process.cwd() is the standalone dir. APP_ROOT lets the
-// server override this explicitly so uploads land in the right place.
+// process.cwd() in standalone mode is the PM2 launch dir (APP_DIR), not the
+// standalone dir. Next.js standalone only serves public files from its own
+// standalone/public/ tree, so uploads written to APP_DIR/public/avatars/ would
+// 404. APP_ROOT must be set to the standalone dir in production.
+// e.g. APP_ROOT="/var/www/vhosts/avolo.app/httpdocs/.next/standalone"
+if (process.env.NODE_ENV === "production" && !process.env.APP_ROOT) {
+  console.warn("[avatar] APP_ROOT is not set — avatar uploads may be written to the wrong directory and return 404. Set APP_ROOT to the .next/standalone directory in your .env file.");
+}
 const APP_ROOT = process.env.APP_ROOT ?? process.cwd();
 const AVATAR_DIR = path.join(APP_ROOT, "public", "avatars");
 

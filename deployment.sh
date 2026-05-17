@@ -100,9 +100,28 @@ ok "Build complete"
 
 # ── Step 5: Copy static assets ───────────────────────────────────────────────
 info "[5/6] Copying static assets into standalone output"
+
+# Back up user-uploaded avatars before wiping standalone/public/ — they live
+# inside standalone/public/avatars/ (set via APP_ROOT in .env) and are not
+# part of the repo, so a plain cp -r would destroy them on every deploy.
+AVATAR_BACKUP=""
+if [ -d ".next/standalone/public/avatars" ] && [ "$(ls -A .next/standalone/public/avatars 2>/dev/null)" ]; then
+  AVATAR_BACKUP=$(mktemp -d)
+  cp -r .next/standalone/public/avatars/. "$AVATAR_BACKUP/"
+  info "Backed up $(ls "$AVATAR_BACKUP" | wc -l) user avatar(s)"
+fi
+
 rm -rf .next/standalone/.next/static .next/standalone/public
 cp -r .next/static   .next/standalone/.next/static
 cp -r public          .next/standalone/public
+
+# Restore avatars
+if [ -n "$AVATAR_BACKUP" ]; then
+  mkdir -p .next/standalone/public/avatars
+  cp -r "$AVATAR_BACKUP/." .next/standalone/public/avatars/
+  rm -rf "$AVATAR_BACKUP"
+  ok "User avatars restored"
+fi
 ok "Static assets copied"
 
 # Create a _next/static symlink at the webroot so Nginx can serve CSS/JS
