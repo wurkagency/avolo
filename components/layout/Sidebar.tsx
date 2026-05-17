@@ -188,8 +188,9 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
   const sidebarWidth = rail ? 64 : 280;
 
   return (
-    <aside className="h-screen-safe" style={{
+    <aside style={{
       width: sidebarWidth,
+      height: "100dvh",
       flexShrink: 0,
       display: "flex",
       flexDirection: "column",

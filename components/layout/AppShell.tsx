@@ -33,7 +33,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
   }, [isMobile]);
 
   return (
-    <div className="h-screen-safe" style={{ display: "flex", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100dvh", overflow: "hidden" }}>
 
       {/* ── Sidebar: full or rail on tablet/desktop ── */}
       {!isMobile && (
@@ -55,11 +55,12 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
             }}
           />
           {/* Drawer */}
-          <div className="h-screen-safe" style={{
+          <div style={{
             position: "fixed",
             top: 0,
             left: 0,
             zIndex: 200,
+            height: "100dvh",
             boxShadow: "4px 0 24px rgba(0, 0, 0, 0.12)",
           }}>
             <Sidebar variant="full" />
