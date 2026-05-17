@@ -113,17 +113,22 @@ function HomeInput() {
   const router     = useRouter();
   const addToast   = useUiStore((s) => s.addToast);
 
-  const [value,       setValue]       = useState("");
-  const [focused,     setFocused]     = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [isListening,  setIsListening]  = useState(false);
+  // Pre-populate from the last raw query so "Edit query" restores what the user typed.
+  const [value,        setValue]       = useState(() => useTripStore.getState().rawQuery);
+  const [focused,      setFocused]     = useState(false);
+  const [loading,      setLoading]     = useState(false);
+  const [isListening,  setIsListening] = useState(false);
   const [showMicModal, setShowMicModal] = useState(false);
   const [micPermState, setMicPermState] = useState<"prompt" | "denied">("prompt");
-  const textareaRef       = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef    = useRef<SpeechRecognitionInstance | null>(null);
-  // Tracks whether the current recognition attempt was triggered by the user
-  // clicking "Allow" in our modal — used to detect Permissions-Policy loops.
-  const micRetryRef = useRef(false);
+  // Detect mic support after mount (window not available on server).
+  const [micSupported, setMicSupported] = useState(false);
+  const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const micRetryRef    = useRef(false);
+
+  useEffect(() => {
+    setMicSupported(getSpeechRecognitionCtor() !== null);
+  }, []);
 
   // Resize textarea whenever value changes (covers both keyboard input and speech).
   useEffect(() => {
@@ -137,15 +142,6 @@ function HomeInput() {
   useEffect(() => {
     return () => { recognitionRef.current?.stop(); };
   }, []);
-
-  const setDeparture   = useTripStore((s) => s.setDeparture);
-  const setDestination = useTripStore((s) => s.setDestination);
-  const setServices    = useTripStore((s) => s.setServices);
-  const setDates       = useTripStore((s) => s.setDates);
-  const setIsOneWay    = useTripStore((s) => s.setIsOneWay);
-  const setFlexibility = useTripStore((s) => s.setFlexibility);
-  const setTravelers   = useTripStore((s) => s.setTravelers);
-  const setLuggage     = useTripStore((s) => s.setLuggage);
 
   async function handleSend() {
     const q = value.trim();
@@ -167,23 +163,26 @@ function HomeInput() {
 
       const parsed = await res.json() as ParsedQuery;
 
-      // Hydrate tripStore with every field the AI resolved
-      if (parsed.departure)        setDeparture(parsed.departure);
-      if (parsed.destination)      setDestination(parsed.destination);
-      if (parsed.services?.length) setServices(parsed.services);
+      // Clear any stale trip data from a previous search before applying the new query.
+      // Without this, old fields (e.g. previous departure airport) bleed into the new search.
+      const store = useTripStore.getState();
+      store.reset();
+      store.setRawQuery(q);
 
-      // Set date fields when a departure date was resolved.
+      if (parsed.departure)        store.setDeparture(parsed.departure);
+      if (parsed.destination)      store.setDestination(parsed.destination);
+      if (parsed.services?.length) store.setServices(parsed.services);
+
       if (parsed.departureDate) {
-        setDates(parsed.departureDate, parsed.returnDate ?? null, parsed.isOneWay ?? false);
+        store.setDates(parsed.departureDate, parsed.returnDate ?? null, parsed.isOneWay ?? false);
       } else if (parsed.filledFields.includes("isOneWay")) {
-        // AI resolved the one-way flag but no date yet — persist just the trip type.
-        setIsOneWay(parsed.isOneWay ?? false);
+        store.setIsOneWay(parsed.isOneWay ?? false);
       }
 
-      if (parsed.flexibility) setFlexibility(parsed.flexibility);
+      if (parsed.flexibility) store.setFlexibility(parsed.flexibility);
 
       if (parsed.adults !== undefined || parsed.children !== undefined) {
-        setTravelers(
+        store.setTravelers(
           parsed.adults        ?? 1,
           parsed.children      ?? [],
           parsed.hasDisability ?? false,
@@ -195,14 +194,14 @@ function HomeInput() {
         parsed.checkedLuggage !== undefined ||
         parsed.specialLuggage !== undefined
       ) {
-        setLuggage(
+        store.setLuggage(
           parsed.handLuggage    ?? 1,
           parsed.checkedLuggage ?? 0,
           parsed.specialLuggage ?? false,
         );
       }
 
-      useTripStore.getState().setLastFilledFields(parsed.filledFields);
+      store.setLastFilledFields(parsed.filledFields);
       router.push("/explore/confirm");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
@@ -361,8 +360,8 @@ function HomeInput() {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           disabled={loading}
-          placeholder='Where do you want to go? Try "Flights to Tokyo in June"…'
-          rows={1}
+          placeholder='Where do you want to go? Try "Flights to Toscana in July"…'
+          rows={2}
           style={{
             ...t.bodyMd,
             flex: 1,
@@ -373,8 +372,8 @@ function HomeInput() {
             backgroundColor: "transparent",
             color: "var(--color-ink)",
             fontFamily: "inherit",
-            minHeight: 28,
-            maxHeight: 160,
+            minHeight: 52,
+            maxHeight: 200,
             lineHeight: 1.55,
             opacity: loading ? 0.6 : 1,
           }}
@@ -427,38 +426,40 @@ function HomeInput() {
 
         <div style={{ flex: 1 }} />
 
-        {/* Mic button — primary brand styling */}
-        <button
-          type="button"
-          onClick={handleMic}
-          disabled={loading}
-          aria-label={isListening ? "Stop recording" : "Start voice input"}
-          aria-pressed={isListening}
-          style={{
-            width:           36,
-            height:          36,
-            borderRadius:    "var(--rounded-md)",
-            border:          "none",
-            cursor:          loading ? "not-allowed" : "pointer",
-            backgroundColor: "var(--color-primary)",
-            color:           "var(--color-on-primary)",
-            display:         "flex",
-            alignItems:      "center",
-            justifyContent:  "center",
-            flexShrink:      0,
-            opacity:         loading ? 0.5 : 1,
-            animation:       isListening ? "mic-pulse 1.4s ease-in-out infinite" : "none",
-            transition:      "opacity 120ms",
-          }}
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}
-            aria-hidden="true"
+        {/* Mic button — only shown when Web Speech API is available (not iOS Safari) */}
+        {micSupported && (
+          <button
+            type="button"
+            onClick={handleMic}
+            disabled={loading}
+            aria-label={isListening ? "Stop recording" : "Start voice input"}
+            aria-pressed={isListening}
+            style={{
+              width:           36,
+              height:          36,
+              borderRadius:    "var(--rounded-md)",
+              border:          "none",
+              cursor:          loading ? "not-allowed" : "pointer",
+              backgroundColor: "var(--color-primary)",
+              color:           "var(--color-on-primary)",
+              display:         "flex",
+              alignItems:      "center",
+              justifyContent:  "center",
+              flexShrink:      0,
+              opacity:         loading ? 0.5 : 1,
+              animation:       isListening ? "mic-pulse 1.4s ease-in-out infinite" : "none",
+              transition:      "opacity 120ms",
+            }}
           >
-            {isListening ? "mic_off" : "mic"}
-          </span>
-        </button>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}
+              aria-hidden="true"
+            >
+              {isListening ? "mic_off" : "mic"}
+            </span>
+          </button>
+        )}
 
         {/* Send button — dark styling */}
         <button

@@ -11,6 +11,8 @@ import {
 interface TripWizardMeta {
   /** Fields explicitly resolved by the AI on the last interpret-query call. */
   lastFilledFields: (keyof TripDraft)[];
+  /** The raw text the user typed — preserved so the input can be pre-filled on "Edit query". */
+  rawQuery: string;
 }
 
 interface TripActions {
@@ -24,6 +26,7 @@ interface TripActions {
   setTravelers: (adults: number, children: number[], hasDisability: boolean) => void;
   setLuggage: (handLuggage: number, checkedLuggage: number, specialLuggage: boolean) => void;
   setLastFilledFields: (fields: (keyof TripDraft)[]) => void;
+  setRawQuery: (q: string) => void;
   reset: () => void;
 }
 
@@ -34,6 +37,7 @@ export const useTripStore = create<TripStore>()(
     (set) => ({
       ...defaultTripDraft,
       lastFilledFields: [] as (keyof TripDraft)[],
+      rawQuery: "",
 
       setDeparture: (v) => set({ departure: v }),
 
@@ -69,7 +73,9 @@ export const useTripStore = create<TripStore>()(
 
       setLastFilledFields: (fields) => set({ lastFilledFields: fields }),
 
-      reset: () => set({ ...defaultTripDraft, lastFilledFields: [] }),
+      setRawQuery: (q) => set({ rawQuery: q }),
+
+      reset: () => set({ ...defaultTripDraft, lastFilledFields: [], rawQuery: "" }),
     }),
     {
       name: "avolo-trip-draft",
@@ -100,6 +106,7 @@ export const useTripStore = create<TripStore>()(
         checkedLuggage: state.checkedLuggage,
         specialLuggage: state.specialLuggage,
         lastFilledFields: state.lastFilledFields,
+        rawQuery: state.rawQuery,
       }),
     },
   ),
