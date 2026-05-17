@@ -24,6 +24,8 @@ set -euo pipefail
 
 APP_DIR="/var/www/vhosts/avolo.app/httpdocs"
 APP_NAME="avolo"
+NODE_BIN="/opt/plesk/node/22/bin/node"
+PM2_BIN="/opt/plesk/node/22/bin/pm2"
 
 info()  { echo -e "\033[1;34m==>\033[0m $*"; }
 ok()    { echo -e "\033[1;32m  ✓\033[0m $*"; }
@@ -109,6 +111,11 @@ mkdir -p _next
 ln -sfn ../.next/standalone/.next/static _next/static
 ok "_next/static symlink updated"
 
+# Fix ownership — build runs as root but Nginx serves files as avolo.app.
+# Without this, /_next/static/ returns 403 due to disable_symlinks if_not_owner.
+chown -R avolo.app:psacln .next/ _next/
+ok "Ownership fixed (avolo.app:psacln)"
+
 # ── Step 6: Restart PM2 ───────────────────────────────────────────────────────
 info "[6/6] Restarting application via PM2"
 
@@ -116,17 +123,17 @@ info "[6/6] Restarting application via PM2"
 load_env .env
 
 # pm2 describe exits 0 if the process is registered (any state), non-zero if unknown.
-if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
+if "$NODE_BIN" "$PM2_BIN" describe "$APP_NAME" > /dev/null 2>&1; then
   # Process registered with PM2 — restart it (brief downtime in fork mode)
-  pm2 restart "$APP_NAME" --update-env
+  "$NODE_BIN" "$PM2_BIN" restart "$APP_NAME" --update-env
   ok "PM2 process '$APP_NAME' restarted"
 else
   # Process not known to PM2 — start fresh
   warn "PM2 process '$APP_NAME' not found — starting fresh."
-  pm2 start .next/standalone/server.js \
+  "$NODE_BIN" "$PM2_BIN" start .next/standalone/server.js \
     --name "$APP_NAME" \
-    --interpreter node
-  pm2 save
+    --interpreter "$NODE_BIN"
+  "$NODE_BIN" "$PM2_BIN" save
   ok "PM2 process started"
 fi
 

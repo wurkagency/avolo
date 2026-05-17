@@ -22,6 +22,8 @@ set -euo pipefail
 # ── Config ────────────────────────────────────────────────────────────────────
 APP_DIR="/var/www/vhosts/avolo.app/httpdocs"
 APP_NAME="avolo"
+NODE_BIN="/opt/plesk/node/22/bin/node"
+PM2_BIN="/opt/plesk/node/22/bin/pm2"
 NODE_MIN_VERSION=20
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -148,6 +150,11 @@ mkdir -p _next
 ln -sfn ../.next/standalone/.next/static _next/static
 ok "_next/static symlink created"
 
+# Fix ownership — build runs as root but Nginx serves files as avolo.app.
+# Without this, /_next/static/ returns 403 due to disable_symlinks if_not_owner.
+chown -R avolo.app:psacln .next/ _next/
+ok "Ownership fixed (avolo.app:psacln)"
+
 # ── Step 7: Start application with PM2 ───────────────────────────────────────
 info "[7/8] Starting application with PM2"
 
@@ -159,18 +166,18 @@ PORT="${PORT:-3000}"
 HOSTNAME="${HOSTNAME:-0.0.0.0}"
 
 # Stop any existing process with this name before starting fresh
-pm2 delete "$APP_NAME" 2>/dev/null || true
+"$NODE_BIN" "$PM2_BIN" delete "$APP_NAME" 2>/dev/null || true
 
-pm2 start .next/standalone/server.js \
+"$NODE_BIN" "$PM2_BIN" start .next/standalone/server.js \
   --name "$APP_NAME" \
-  --interpreter node
+  --interpreter "$NODE_BIN"
 
-pm2 save
+"$NODE_BIN" "$PM2_BIN" save
 ok "Application started (PM2 process: $APP_NAME, port: $PORT)"
 
 # ── Step 8: Persist PM2 across reboots ───────────────────────────────────────
 info "[8/8] Configuring PM2 startup"
-STARTUP_CMD=$(pm2 startup | grep "sudo env" || true)
+STARTUP_CMD=$("$NODE_BIN" "$PM2_BIN" startup | grep "sudo env" || true)
 if [ -n "$STARTUP_CMD" ]; then
   echo ""
   echo "  Run this command as root to enable PM2 auto-start on reboot:"
