@@ -50,7 +50,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
               position: "fixed",
               inset: 0,
               zIndex: 190,
-              backgroundColor: "var(--color-backdrop)",
+              backgroundColor: "rgba(31, 31, 31, 0.40)",
               backdropFilter: "blur(2px)",
             }}
           />
@@ -61,7 +61,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
             left: 0,
             zIndex: 200,
             height: "100dvh",
-            boxShadow: `4px 0 24px var(--color-shadow-drawer)`,
+            boxShadow: "4px 0 24px rgba(0, 0, 0, 0.12)",
           }}>
             <Sidebar variant="full" />
           </div>

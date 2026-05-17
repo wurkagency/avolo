@@ -326,7 +326,7 @@ function HomeInput() {
         backgroundColor: "var(--color-canvas)",
         overflow: "hidden",
         transition: "border-color 120ms",
-        boxShadow: focused ? "0 0 0 3px var(--color-primary-glow)" : "none",
+        boxShadow: focused ? "0 0 0 3px rgba(250, 82, 15, 0.08)" : "none",
       }}
     >
       {/* Textarea row */}
@@ -509,7 +509,7 @@ function HomeInput() {
 
       <style>{`
         @keyframes mic-pulse {
-          0%   { box-shadow: 0 0 0 0   var(--color-primary-glow); }
+          0%   { box-shadow: 0 0 0 0   rgba(250, 82, 15, 0.08); }
           70%  { box-shadow: 0 0 0 8px transparent; }
           100% { box-shadow: 0 0 0 0   transparent; }
         }

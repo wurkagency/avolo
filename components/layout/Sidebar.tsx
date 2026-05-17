@@ -265,7 +265,7 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">add</span>
                 New trip
               </span>
-              <span style={{ fontSize: 11, opacity: 0.65, backgroundColor: "var(--color-on-primary-overlay)", borderRadius: "var(--rounded-xs)", padding: "2px 5px" }}>
+              <span style={{ fontSize: 11, opacity: 0.65, backgroundColor: "rgba(255, 255, 255, 0.18)", borderRadius: "var(--rounded-xs)", padding: "2px 5px" }}>
                 ⌘ T
               </span>
             </Link>
