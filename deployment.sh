@@ -103,6 +103,12 @@ cp -r .next/static   .next/standalone/.next/static
 cp -r public          .next/standalone/public
 ok "Static assets copied"
 
+# Create a _next/static symlink at the webroot so Nginx can serve CSS/JS
+# directly without proxying to Node.js (required when Plesk does try_files).
+mkdir -p _next
+ln -sfn ../.next/standalone/.next/static _next/static
+ok "_next/static symlink updated"
+
 # ── Step 6: Restart PM2 ───────────────────────────────────────────────────────
 info "[6/6] Restarting application via PM2"
 

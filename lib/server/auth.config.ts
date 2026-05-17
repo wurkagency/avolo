@@ -11,6 +11,7 @@ interface AvoloUser {
 }
 
 export const authConfig = {
+  trustHost: true,
   session: { strategy: "jwt" as const },
 
   pages: {
