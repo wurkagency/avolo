@@ -587,6 +587,36 @@ export function WelcomeState() {
 
   const firstName = session?.user?.name?.split(" ")[0] ?? null;
 
+  // On first load, request location and pre-fill the nearest major airport as departure
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("geolocation" in navigator)) return;
+    // Don't overwrite if user already has a departure set
+    if (useTripStore.getState().departure) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        void fetch(`/api/airports/nearest?lat=${latitude}&lng=${longitude}`)
+          .then((r) => r.ok ? r.json() : null)
+          .then((data: { airport: { iataCode: string; name: string; municipality: string | null } | null } | null) => {
+            if (!data?.airport) return;
+            // Only set if still empty (user may have typed meanwhile)
+            if (useTripStore.getState().departure) return;
+            const { iataCode, name, municipality } = data.airport;
+            useTripStore.getState().setDeparture({
+              iata: iataCode,
+              name: municipality ? `${municipality} (${iataCode})` : `${name} (${iataCode})`,
+            });
+          })
+          .catch(() => { /* silently ignore */ });
+      },
+      () => { /* permission denied or unavailable — silently skip */ },
+      { timeout: 8000, maximumAge: 300_000 },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
     {aiErrorProviders.length > 0 && !aiModalDismissed && (
@@ -636,7 +666,8 @@ export function WelcomeState() {
               margin: 0,
             }}
           >
-            Come fly with us ♬
+            Come fly with us{" "}
+            <span style={{ fontFamily: "cursive", fontStyle: "italic" }}>♬</span>
           </h1>
           <p
             style={{

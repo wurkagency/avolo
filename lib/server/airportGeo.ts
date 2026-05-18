@@ -8,6 +8,7 @@ export interface AirportGeo {
   country: string;
   lat: number;
   lon: number;
+  type: string; // "large_airport" | "medium_airport" | ...
 }
 
 let geoCache: AirportGeo[] | null = null;
@@ -85,6 +86,7 @@ export function loadAirportGeo(): AirportGeo[] {
       country: (cols[countryIdx] ?? "").replace(/"/g, "").trim(),
       lat,
       lon,
+      type,
     });
   }
 
@@ -94,6 +96,25 @@ export function loadAirportGeo(): AirportGeo[] {
 
 export function findAirportByIata(iata: string): AirportGeo | undefined {
   return loadAirportGeo().find((a) => a.iataCode === iata.toUpperCase());
+}
+
+/** Returns the nearest major (large first, then medium) airport to the given coordinates. */
+export function findNearestAirportByCoords(lat: number, lon: number): AirportGeo | null {
+  const all = loadAirportGeo();
+  if (all.length === 0) return null;
+
+  // Prefer large airports; fall back to the full set
+  const pool = all.some((a) => a.type === "large_airport")
+    ? all.filter((a) => a.type === "large_airport")
+    : all;
+
+  let nearest: AirportGeo | null = null;
+  let minDist = Infinity;
+  for (const a of pool) {
+    const d = haversineKm(lat, lon, a.lat, a.lon);
+    if (d < minDist) { minDist = d; nearest = a; }
+  }
+  return nearest;
 }
 
 export function findNearbyAirports(iata: string, radiusKm = 100): AirportGeo[] {

@@ -228,7 +228,7 @@ export function QueryConfirmCard() {
   }
 
   function handleEditManually() {
-    router.push("/explore/services");
+    router.push("/explore/flights");
   }
 
   // ── Field display values ────────────────────────────────────────────────────
