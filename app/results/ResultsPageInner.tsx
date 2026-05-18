@@ -7,6 +7,7 @@ import { useTripStore } from "@/lib/state/tripStore";
 import { SSEStatus } from "@/components/results/SSEStatus";
 import { ResultsGrid } from "@/components/results/ResultsGrid";
 import { SelectionBar } from "@/components/results/SelectionBar";
+import { AllProvidersFailedModal } from "@/components/results/AllProvidersFailedModal";
 import { useSelectionStore } from "@/lib/state/selectionStore";
 import type { ServiceType } from "@/types/trip";
 import type { NormalizedResult } from "@/types/search";
@@ -83,7 +84,7 @@ export function ResultsPageInner() {
 
   // Only open SSE for DRAFT trips (not yet searched); null disables the hook
   const needsStream = !tripLoading && trip?.status === "DRAFT";
-  const { status, results: sseResults, isDone: sseIsDone, error: sseError } = useSSEStream(
+  const { status, results: sseResults, isDone: sseIsDone, error: sseError, allProvidersFailed } = useSSEStream(
     needsStream ? tripId : null,
   );
 
@@ -116,6 +117,10 @@ export function ResultsPageInner() {
   const destinationName = trip?.destinationName ?? storeDestination?.name ?? "";
 
   return (
+    <>
+    {allProvidersFailed && (
+      <AllProvidersFailedModal destination={destinationName} />
+    )}
     <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-10">
         <p
@@ -151,5 +156,6 @@ export function ResultsPageInner() {
       />
       <SelectionBar />
     </main>
+    </>
   );
 }

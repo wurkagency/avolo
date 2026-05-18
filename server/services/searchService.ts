@@ -38,15 +38,15 @@ export type EmitFn = (event: SSEEvent) => void;
 
 // ─── Per-category fetch + normalize + rank ─────────────────────────────────
 
+// Returns [results, hasRealData] — hasRealData is false when every result is a stub or there are none
 async function fetchAndRankFlights(
   req: SearchRequest,
   emit: EmitFn,
-): Promise<NormalizedResult[]> {
+): Promise<[NormalizedResult[], boolean]> {
   emit({ event: "status", message: "Searching for flights…" });
 
   let normalized: NormalizedResult[] = [];
 
-  // Sequential provider chain: TravelPayouts → Duffel
   try {
     const tpRaw = await fetchTravelPayoutsFlights(req);
     normalized.push(...normalizeTravelPayoutsFlights(tpRaw, req.departure, req.destination));
@@ -64,6 +64,7 @@ async function fetchAndRankFlights(
   }
 
   normalized = deduplicateFlights(normalized);
+  const hasRealData = normalized.some((r) => r.provider !== "stub");
 
   if (normalized.length > 0) {
     try {
@@ -75,20 +76,22 @@ async function fetchAndRankFlights(
     }
   }
 
-  return normalized;
+  return [normalized, hasRealData];
 }
 
 async function fetchAndRankHotels(
   req: SearchRequest,
   emit: EmitFn,
-): Promise<NormalizedResult[]> {
+): Promise<[NormalizedResult[], boolean]> {
   emit({ event: "status", message: "Searching for hotels…" });
 
   let normalized: NormalizedResult[] = [];
+  let hasRealData = false;
 
   try {
     const raw = await fetchTravelPayoutsHotels(req);
     normalized.push(...normalizeHotels(raw));
+    hasRealData = normalized.length > 0;
   } catch (err) {
     console.error("[searchService] TravelPayouts hotels failed:", err instanceof Error ? err.message : err);
   }
@@ -112,20 +115,22 @@ async function fetchAndRankHotels(
     }
   }
 
-  return normalized;
+  return [normalized, hasRealData];
 }
 
 async function fetchAndRankCars(
   req: SearchRequest,
   emit: EmitFn,
-): Promise<NormalizedResult[]> {
+): Promise<[NormalizedResult[], boolean]> {
   emit({ event: "status", message: "Searching for car rentals…" });
 
   let normalized: NormalizedResult[] = [];
+  let hasRealData = false;
 
   try {
     const raw = await fetchTravelPayoutsCars(req);
     normalized.push(...normalizeCars(raw));
+    hasRealData = normalized.length > 0;
   } catch (err) {
     console.error("[searchService] TravelPayouts cars failed:", err instanceof Error ? err.message : err);
   }
@@ -149,20 +154,22 @@ async function fetchAndRankCars(
     }
   }
 
-  return normalized;
+  return [normalized, hasRealData];
 }
 
 async function fetchAndRankExcursions(
   req: SearchRequest,
   emit: EmitFn,
-): Promise<NormalizedResult[]> {
+): Promise<[NormalizedResult[], boolean]> {
   emit({ event: "status", message: "Searching for excursions…" });
 
   let normalized: NormalizedResult[] = [];
+  let hasRealData = false;
 
   try {
     const raw = await fetchExcursions(req);
     normalized.push(...normalizeExcursions(raw));
+    hasRealData = normalized.length > 0;
   } catch (err) {
     console.error("[searchService] Excursions failed:", err instanceof Error ? err.message : err);
   }
@@ -181,7 +188,7 @@ async function fetchAndRankExcursions(
     }
   }
 
-  return normalized;
+  return [normalized, hasRealData];
 }
 
 // ─── Cache results to DB ───────────────────────────────────────────────────
@@ -245,14 +252,19 @@ export async function runSearch(
   // When a category completes it immediately emits its results (true streaming).
   // The done event is emitted only after ALL categories finish.
 
+  // Track which requested categories returned real (non-stub) data
+  const realDataFlags: Partial<Record<string, boolean>> = {};
+
   const flightTask = services.includes("FLIGHT")
     ? fetchAndRankFlights(req, emit)
-        .then((results) => {
-          emit({ event: "category", type: "FLIGHT", results });
-          allResults.push(...results);
+        .then(([results, hasReal]) => {
+          realDataFlags["FLIGHT"] = hasReal;
+          emit({ event: "category", type: "FLIGHT", results: hasReal ? results : [] });
+          if (hasReal) allResults.push(...results);
           return results;
         })
         .catch((err) => {
+          realDataFlags["FLIGHT"] = false;
           const msg = err instanceof Error ? err.message : "Unknown error";
           emit({ event: "category", type: "FLIGHT", results: [], error: msg });
           return [];
@@ -261,12 +273,14 @@ export async function runSearch(
 
   const hotelTask = services.includes("HOTEL")
     ? fetchAndRankHotels(req, emit)
-        .then((results) => {
-          emit({ event: "category", type: "HOTEL", results });
-          allResults.push(...results);
+        .then(([results, hasReal]) => {
+          realDataFlags["HOTEL"] = hasReal;
+          emit({ event: "category", type: "HOTEL", results: hasReal ? results : [] });
+          if (hasReal) allResults.push(...results);
           return results;
         })
         .catch((err) => {
+          realDataFlags["HOTEL"] = false;
           const msg = err instanceof Error ? err.message : "Unknown error";
           emit({ event: "category", type: "HOTEL", results: [], error: msg });
           return [];
@@ -275,12 +289,14 @@ export async function runSearch(
 
   const carTask = services.includes("CAR")
     ? fetchAndRankCars(req, emit)
-        .then((results) => {
-          emit({ event: "category", type: "CAR", results });
-          allResults.push(...results);
+        .then(([results, hasReal]) => {
+          realDataFlags["CAR"] = hasReal;
+          emit({ event: "category", type: "CAR", results: hasReal ? results : [] });
+          if (hasReal) allResults.push(...results);
           return results;
         })
         .catch((err) => {
+          realDataFlags["CAR"] = false;
           const msg = err instanceof Error ? err.message : "Unknown error";
           emit({ event: "category", type: "CAR", results: [], error: msg });
           return [];
@@ -289,12 +305,14 @@ export async function runSearch(
 
   const excursionTask = services.includes("EXCURSION")
     ? fetchAndRankExcursions(req, emit)
-        .then((results) => {
-          emit({ event: "category", type: "EXCURSION", results });
-          allResults.push(...results);
+        .then(([results, hasReal]) => {
+          realDataFlags["EXCURSION"] = hasReal;
+          emit({ event: "category", type: "EXCURSION", results: hasReal ? results : [] });
+          if (hasReal) allResults.push(...results);
           return results;
         })
         .catch((err) => {
+          realDataFlags["EXCURSION"] = false;
           const msg = err instanceof Error ? err.message : "Unknown error";
           emit({ event: "category", type: "EXCURSION", results: [], error: msg });
           return [];
@@ -303,6 +321,18 @@ export async function runSearch(
 
   // Wait for all categories (Promise.allSettled never throws)
   await Promise.allSettled([flightTask, hotelTask, carTask, excursionTask]);
+
+  // If every requested category had NO real data, signal total provider failure
+  const requestedCategories = services.filter((s) =>
+    ["FLIGHT", "HOTEL", "CAR", "EXCURSION"].includes(s),
+  );
+  const allProvidersFailed =
+    requestedCategories.length > 0 &&
+    requestedCategories.every((s) => realDataFlags[s] === false);
+
+  if (allProvidersFailed) {
+    emit({ event: "all_providers_failed" });
+  }
 
   // Persist results + update trip state
   try {
