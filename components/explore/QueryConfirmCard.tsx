@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { useTripStore } from "@/lib/state/tripStore";
 import { nextMissingStep } from "@/lib/utils/wizardRouting";
+import { createSearch } from "@/lib/api/searchClient";
 import type { ServiceType } from "@/types/trip";
+import type { SearchRequest } from "@/types/search";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SERVICE_LABELS: Record<ServiceType, string> = {
   FLIGHT:    "Flight",
@@ -23,37 +26,40 @@ const SERVICE_ICONS: Record<ServiceType, string> = {
 };
 
 const FLEX_LABELS: Record<string, string> = {
-  PLUS_MINUS_1: "±1 day",
-  PLUS_MINUS_3: "±3 days",
-  PLUS_MINUS_7: "±7 days",
+  PLUS_MINUS_1: "±1 day flexibility",
+  PLUS_MINUS_3: "±3 days flexibility",
+  PLUS_MINUS_7: "±7 days flexibility",
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string): string {
   return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", {
     weekday: "short",
     day:     "numeric",
-    month:   "short",
+    month:   "long",
     year:    "numeric",
   });
 }
 
-// ─── FieldRow ─────────────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface FieldRowProps {
   icon:    string;
   label:   string;
   value:   React.ReactNode;
   missing: boolean;
+  required?: boolean;
 }
 
-function FieldRow({ icon, label, value, missing }: FieldRowProps) {
+function FieldRow({ icon, label, value, missing, required }: FieldRowProps) {
   return (
     <div
       style={{
         display:      "flex",
         alignItems:   "flex-start",
-        gap:          "var(--spacing-sm)",
-        padding:      "var(--spacing-sm) 0",
+        gap:          12,
+        padding:      "14px 0",
         borderBottom: "1px solid var(--color-hairline-soft)",
       }}
     >
@@ -61,7 +67,7 @@ function FieldRow({ icon, label, value, missing }: FieldRowProps) {
         className="material-symbols-outlined"
         style={{
           fontSize:   18,
-          color:      missing ? "var(--color-muted)" : "var(--color-primary)",
+          color:      missing ? (required ? "var(--color-error, #c0392b)" : "var(--color-muted)") : "var(--color-primary)",
           flexShrink: 0,
           marginTop:  2,
         }}
@@ -71,22 +77,27 @@ function FieldRow({ icon, label, value, missing }: FieldRowProps) {
       </span>
       <span
         style={{
-          fontSize:   13,
-          fontWeight: 500,
+          fontSize:   12,
+          fontWeight: 600,
           color:      "var(--color-steel)",
-          minWidth:   84,
+          minWidth:   88,
           flexShrink: 0,
           fontFamily: "var(--font-inter)",
-          paddingTop: 1,
+          paddingTop: 2,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
         }}
       >
         {label}
+        {required && missing && (
+          <span style={{ color: "var(--color-error, #c0392b)", marginLeft: 4 }}>*</span>
+        )}
       </span>
       <span
         style={{
           fontSize:   14,
           lineHeight: 1.5,
-          color:      missing ? "var(--color-muted)" : "var(--color-ink)",
+          color:      missing ? (required ? "var(--color-error, #c0392b)" : "var(--color-muted)") : "var(--color-ink)",
           fontStyle:  missing ? "italic" : "normal",
           fontFamily: "var(--font-inter)",
         }}
@@ -97,12 +108,10 @@ function FieldRow({ icon, label, value, missing }: FieldRowProps) {
   );
 }
 
-// ─── ServicePills ─────────────────────────────────────────────────────────────
-
 function ServicePills({ services }: { services: ServiceType[] }) {
   if (services.length === 0) return <em style={{ color: "var(--color-muted)" }}>None selected</em>;
   return (
-    <span style={{ display: "flex", alignItems: "center", gap: "var(--spacing-xs)", flexWrap: "wrap" }}>
+    <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
       {services.map((svc) => (
         <span
           key={svc}
@@ -110,7 +119,7 @@ function ServicePills({ services }: { services: ServiceType[] }) {
             display:         "inline-flex",
             alignItems:      "center",
             gap:             4,
-            padding:         "2px 10px",
+            padding:         "3px 10px",
             borderRadius:    "var(--rounded-lg)",
             backgroundColor: "var(--color-cream)",
             border:          "1px solid var(--color-beige-deep)",
@@ -134,6 +143,8 @@ function ServicePills({ services }: { services: ServiceType[] }) {
 
 export function QueryConfirmCard() {
   const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     departure,
@@ -145,6 +156,10 @@ export function QueryConfirmCard() {
     flexibility,
     adults,
     children,
+    hasDisability,
+    handLuggage,
+    checkedLuggage,
+    specialLuggage,
     lastFilledFields,
   } = useTripStore(
     useShallow((s) => ({
@@ -157,71 +172,160 @@ export function QueryConfirmCard() {
       flexibility:      s.flexibility,
       adults:           s.adults,
       children:         s.children,
+      hasDisability:    s.hasDisability,
+      handLuggage:      s.handLuggage,
+      checkedLuggage:   s.checkedLuggage,
+      specialLuggage:   s.specialLuggage,
       lastFilledFields: s.lastFilledFields,
     })),
   );
 
-  function handleContinue() {
+  // ── Validation ─────────────────────────────────────────────────────────────
+  const hasFlight = services.includes("FLIGHT");
+  const missingDep  = !departure;
+  const missingDest = !destination;
+  const missingDate = !departureDate;
+
+  // All three are required by SearchRequest regardless of services
+  const canSearch = !missingDep && !missingDest && !missingDate;
+
+  // ── Search submission ───────────────────────────────────────────────────────
+  async function handleSearch() {
+    if (!canSearch || submitting || !departure || !destination || !departureDate) return;
+
+    const dep  = departure;
+    const dest = destination;
+
+    const req: SearchRequest = {
+      departure:     dep.iata,
+      departureName: dep.name,
+      destination:   dest.iata,
+      destinationName: dest.name,
+      ...(dep.nearbyIatas?.length  ? { departureAirports:   [dep.iata,  ...dep.nearbyIatas]  } : {}),
+      ...(dest.nearbyIatas?.length ? { destinationAirports: [dest.iata, ...dest.nearbyIatas] } : {}),
+      services,
+      departureDate:  departureDate,
+      returnDate:     isOneWay ? null : (returnDate ?? null),
+      isOneWay,
+      flexibility,
+      adults,
+      children,
+      hasDisability,
+      handLuggage,
+      checkedLuggage,
+      specialLuggage,
+    };
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const { tripId } = await createSearch(req);
+      router.push(`/results?tripId=${encodeURIComponent(tripId)}`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Search failed — please try again");
+      setSubmitting(false);
+    }
+  }
+
+  function handleEditManually() {
     const store  = useTripStore.getState();
     const filled = new Set(store.lastFilledFields);
     router.push(nextMissingStep(store, filled));
   }
 
-  // ── Route value ────────────────────────────────────────────────────────────
+  // ── Field display values ────────────────────────────────────────────────────
+
+  // Route
+  const depLabel  = departure  ? `${departure.name} (${departure.iata})`   : null;
+  const destLabel = destination ? `${destination.name} (${destination.iata})` : null;
+
   let routeValue: React.ReactNode;
   let routeMissing = false;
 
-  if (departure && destination) {
-    routeValue = `${departure.name} → ${destination.name}`;
-  } else if (departure) {
-    routeValue = <>{departure.name} → <em style={{ color: "var(--color-muted)" }}>destination missing</em></>;
+  if (depLabel && destLabel) {
+    routeValue = (
+      <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <strong style={{ fontWeight: 600 }}>{depLabel}</strong>
+        <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--color-steel)" }}>arrow_forward</span>
+        <strong style={{ fontWeight: 600 }}>{destLabel}</strong>
+      </span>
+    );
+  } else if (depLabel) {
+    routeValue = (
+      <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <strong style={{ fontWeight: 600 }}>{depLabel}</strong>
+        <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--color-steel)" }}>arrow_forward</span>
+        <em>destination not set</em>
+      </span>
+    );
     routeMissing = true;
-  } else if (destination) {
-    routeValue = <><em style={{ color: "var(--color-muted)" }}>departure missing</em> → {destination.name}</>;
+  } else if (destLabel) {
+    routeValue = (
+      <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <em>departure not set</em>
+        <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--color-steel)" }}>arrow_forward</span>
+        <strong style={{ fontWeight: 600 }}>{destLabel}</strong>
+      </span>
+    );
     routeMissing = true;
   } else {
-    routeValue = "Departure & destination not set";
+    routeValue = "Departure and destination not set";
     routeMissing = true;
   }
 
-  // ── Dates value ────────────────────────────────────────────────────────────
+  // Dates
   let datesValue: React.ReactNode;
   let datesMissing = false;
 
   if (departureDate) {
-    const depLabel = fmtDate(departureDate);
+    const depStr = fmtDate(departureDate);
     let base: React.ReactNode;
 
     if (isOneWay) {
-      base = `${depLabel} (one way)`;
+      base = <>{depStr} <span style={{ fontSize: 12, color: "var(--color-steel)" }}>(one way)</span></>;
     } else if (returnDate) {
-      base = `${depLabel} – ${fmtDate(returnDate)}`;
+      base = `${depStr} – ${fmtDate(returnDate)}`;
     } else {
-      base = <>{depLabel} – <em style={{ color: "var(--color-muted)" }}>return date missing</em></>;
+      base = <>{depStr} – <em>return date not set</em></>;
       datesMissing = true;
     }
 
     if (flexibility && flexibility !== "EXACT") {
       datesValue = (
-        <>
-          {base}{" "}
-          <span style={{ fontSize: 12, color: "var(--color-steel)" }}>({FLEX_LABELS[flexibility]})</span>
-        </>
+        <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span>{base}</span>
+          <span style={{ fontSize: 12, color: "var(--color-steel)" }}>{FLEX_LABELS[flexibility]}</span>
+        </span>
       );
     } else {
       datesValue = base;
     }
   } else {
-    datesValue = "Not set — you'll pick these next";
+    datesValue = "Departure date not set";
     datesMissing = true;
   }
 
-  // ── Travelers value ────────────────────────────────────────────────────────
-  let travelersValue = `${adults} adult${adults !== 1 ? "s" : ""}`;
-  if (children.length > 0) {
-    const ages = children.map((age) => `age ${age}`).join(", ");
-    travelersValue += `, ${children.length} child${children.length !== 1 ? "ren" : ""} (${ages})`;
-  }
+  // Travelers
+  const adultStr = `${adults} adult${adults !== 1 ? "s" : ""}`;
+  const kidStr   = children.length > 0
+    ? `, ${children.length} child${children.length !== 1 ? "ren" : ""} (ages: ${children.join(", ")})`
+    : "";
+  const disabilityStr = hasDisability ? " · accessibility assistance" : "";
+  const travelersValue = `${adultStr}${kidStr}${disabilityStr}`;
+
+  // Luggage
+  const luggageParts: string[] = [];
+  if (handLuggage > 0) luggageParts.push(`${handLuggage} cabin bag${handLuggage !== 1 ? "s" : ""}`);
+  if (checkedLuggage > 0) luggageParts.push(`${checkedLuggage} checked bag${checkedLuggage !== 1 ? "s" : ""}`);
+  if (specialLuggage) luggageParts.push("special items");
+  const luggageValue = luggageParts.length > 0 ? luggageParts.join(", ") : "No checked luggage";
+
+  // Missing required fields summary
+  const missingFields: string[] = [];
+  if (missingDep)  missingFields.push("departure airport");
+  if (missingDest) missingFields.push("destination airport");
+  if (missingDate) missingFields.push("departure date");
 
   return (
     <div
@@ -236,7 +340,7 @@ export function QueryConfirmCard() {
       }}
     >
       {/* Heading */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-xs)" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <h1
           style={{
             fontFamily:    "var(--font-editorial), 'Playfair Display', serif",
@@ -260,8 +364,8 @@ export function QueryConfirmCard() {
           }}
         >
           {lastFilledFields.length > 0
-            ? "Review the details below. Missing fields will be filled in the next steps."
-            : "I couldn't parse any travel details — please fill them in below."}
+            ? "Review every detail before we search. Flights require all route and date fields."
+            : "I couldn't read your query clearly — please review and fill in the fields below."}
         </p>
       </div>
 
@@ -271,59 +375,201 @@ export function QueryConfirmCard() {
           border:          "1px solid var(--color-hairline-soft)",
           borderRadius:    "var(--rounded-lg)",
           backgroundColor: "var(--color-canvas)",
-          padding:         "var(--spacing-xs) var(--spacing-lg)",
+          padding:         "0 var(--spacing-lg)",
         }}
       >
-        <FieldRow icon="flight"         label="Route"     value={routeValue}                      missing={routeMissing} />
-        <FieldRow icon="category"       label="Services"  value={<ServicePills services={services} />} missing={services.length === 0} />
-        <FieldRow icon="calendar_month" label="Dates"     value={datesValue}                      missing={datesMissing} />
-        <FieldRow icon="person"         label="Travelers" value={travelersValue}                  missing={false} />
+        <FieldRow
+          icon="flight"
+          label="Route"
+          value={routeValue}
+          missing={routeMissing}
+          required={routeMissing}
+        />
+        <FieldRow
+          icon="category"
+          label="Services"
+          value={<ServicePills services={services} />}
+          missing={services.length === 0}
+        />
+        <FieldRow
+          icon="calendar_month"
+          label="Dates"
+          value={datesValue}
+          missing={missingDate}
+          required={missingDate}
+        />
+        <FieldRow
+          icon="person"
+          label="Travelers"
+          value={travelersValue}
+          missing={false}
+        />
+        <FieldRow
+          icon="luggage"
+          label="Luggage"
+          value={luggageValue}
+          missing={false}
+        />
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", gap: "var(--spacing-md)" }}>
-        <button
-          type="button"
-          onClick={() => router.push("/explore")}
+      {/* Missing-fields warning */}
+      {missingFields.length > 0 && (
+        <div
           style={{
-            flex:            1,
-            padding:         "16px",
+            display:         "flex",
+            alignItems:      "flex-start",
+            gap:             10,
+            padding:         "12px 16px",
             borderRadius:    "var(--rounded-md)",
-            border:          "1px solid var(--color-hairline-strong)",
-            backgroundColor: "var(--color-canvas)",
-            color:           "var(--color-ink)",
-            fontFamily:      "var(--font-inter)",
-            fontSize:        16,
-            fontWeight:      600,
-            cursor:          "pointer",
+            backgroundColor: "var(--color-error-surface, #fdf2f0)",
+            border:          "1px solid var(--color-error-border, #f5c6bd)",
           }}
         >
-          Edit query
-        </button>
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 18, color: "var(--color-error, #c0392b)", flexShrink: 0, marginTop: 1 }}
+            aria-hidden="true"
+          >
+            warning
+          </span>
+          <p
+            style={{
+              margin:     0,
+              fontFamily: "var(--font-inter)",
+              fontSize:   13,
+              lineHeight: 1.5,
+              color:      "var(--color-error, #c0392b)",
+            }}
+          >
+            <strong>Cannot search yet.</strong> Missing required fields:{" "}
+            {missingFields.join(", ")}. Use <em>Fill in manually</em> below to complete them.
+          </p>
+        </div>
+      )}
+
+      {/* Submit error */}
+      {submitError && (
+        <div
+          style={{
+            display:         "flex",
+            alignItems:      "flex-start",
+            gap:             10,
+            padding:         "12px 16px",
+            borderRadius:    "var(--rounded-md)",
+            backgroundColor: "var(--color-error-surface, #fdf2f0)",
+            border:          "1px solid var(--color-error-border, #f5c6bd)",
+          }}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 18, color: "var(--color-error, #c0392b)", flexShrink: 0, marginTop: 1 }}
+            aria-hidden="true"
+          >
+            error
+          </span>
+          <p style={{ margin: 0, fontFamily: "var(--font-inter)", fontSize: 13, color: "var(--color-error, #c0392b)" }}>
+            {submitError}
+          </p>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* Primary: Search */}
         <button
           type="button"
-          onClick={handleContinue}
+          onClick={handleSearch}
+          disabled={!canSearch || submitting}
           style={{
-            flex:            2,
+            width:           "100%",
             padding:         "16px",
             borderRadius:    "var(--rounded-md)",
             border:          "none",
-            backgroundColor: "var(--color-primary)",
-            color:           "var(--color-on-primary)",
+            backgroundColor: canSearch ? "var(--color-primary)" : "var(--color-muted, #ccc)",
+            color:           "var(--color-on-primary, #fff)",
             fontFamily:      "var(--font-inter)",
             fontSize:        16,
             fontWeight:      700,
-            cursor:          "pointer",
+            cursor:          canSearch && !submitting ? "pointer" : "not-allowed",
+            opacity:         submitting ? 0.7 : 1,
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            gap:             8,
+            transition:      "background-color 0.15s",
           }}
         >
-          Continue
+          {submitting ? (
+            <>
+              <span
+                style={{
+                  display:      "inline-block",
+                  width:        16,
+                  height:       16,
+                  border:       "2px solid rgba(255,255,255,0.3)",
+                  borderTop:    "2px solid #fff",
+                  borderRadius: "50%",
+                  animation:    "spin 0.7s linear infinite",
+                }}
+              />
+              Searching…
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">search</span>
+              Search trips
+            </>
+          )}
         </button>
+
+        {/* Secondary row: Edit query + Fill manually */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => router.push("/explore")}
+            style={{
+              flex:            1,
+              padding:         "13px 16px",
+              borderRadius:    "var(--rounded-md)",
+              border:          "1px solid var(--color-hairline-strong)",
+              backgroundColor: "var(--color-canvas)",
+              color:           "var(--color-ink)",
+              fontFamily:      "var(--font-inter)",
+              fontSize:        14,
+              fontWeight:      600,
+              cursor:          "pointer",
+            }}
+          >
+            Edit query
+          </button>
+          <button
+            type="button"
+            onClick={handleEditManually}
+            style={{
+              flex:            1,
+              padding:         "13px 16px",
+              borderRadius:    "var(--rounded-md)",
+              border:          "1px solid var(--color-hairline-strong)",
+              backgroundColor: "var(--color-canvas)",
+              color:           "var(--color-ink)",
+              fontFamily:      "var(--font-inter)",
+              fontSize:        14,
+              fontWeight:      600,
+              cursor:          "pointer",
+            }}
+          >
+            Fill in manually
+          </button>
+        </div>
       </div>
 
       <style>{`
         @keyframes stepSlideIn {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

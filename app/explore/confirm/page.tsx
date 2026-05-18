@@ -7,12 +7,12 @@ export default function ExploreConfirmPage() {
     <div
       className="bg-surface"
       style={{
-        flex:           1,
-        display:        "flex",
-        flexDirection:  "column",
-        justifyContent: "center",
-        minHeight:      "100dvh",
-        padding:        "var(--spacing-section) var(--spacing-xl)",
+        flex:          1,
+        display:       "flex",
+        flexDirection: "column",
+        minHeight:     "100dvh",
+        padding:       "var(--spacing-section) var(--spacing-xl)",
+        paddingBottom: "var(--spacing-section)",
       }}
     >
       <QueryConfirmCard />
