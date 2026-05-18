@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { ShellTopBar } from "./ShellTopBar";
 import { SunsetStripeBand } from "@/components/ui/SunsetStripeBand";
+import { AvoloLogo } from "@/components/ui/AvoloLogo";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 
 interface AppShellProps {
@@ -63,7 +64,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
             height: "100dvh",
             boxShadow: "4px 0 24px rgba(0, 0, 0, 0.12)",
           }}>
-            <Sidebar variant="full" />
+            <Sidebar variant="full" onClose={() => setMobileOpen(false)} />
           </div>
         </>
       )}
@@ -78,7 +79,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
         minWidth: 0,
       }}>
         <ShellTopBar
-          left={topBarLeft}
+          left={isMobile ? <AvoloLogo height={16} /> : topBarLeft}
           right={topBarRight}
           onMenuToggle={isMobile ? () => setMobileOpen(o => !o) : undefined}
         />

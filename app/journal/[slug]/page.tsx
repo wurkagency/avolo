@@ -4,6 +4,7 @@ import Link from "next/link";
 import { db } from "@/lib/server/db";
 import { getOrGenerateArticle } from "@/server/services/journalService";
 import { ArticleBody } from "@/components/journal/ArticleBody";
+import { fetchUnsplashPhoto } from "@/lib/server/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -12,18 +13,42 @@ interface Props {
   searchParams: { destination?: string; iata?: string };
 }
 
+async function ArticleHeroImage({ slug, destination }: {
+  slug: string;
+  destination: string | undefined;
+}) {
+  let dest = destination;
+  if (!dest) {
+    const article = await db.journalArticle.findUnique({ where: { slug }, select: { destination: true } });
+    dest = article?.destination ?? undefined;
+  }
+  if (!dest) return null;
+
+  const imageUrl = await fetchUnsplashPhoto(`${dest} travel destination landscape`);
+  if (!imageUrl) return null;
+
+  return (
+    <div className="w-full overflow-hidden rounded-lg mb-8" style={{ height: 480 }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={dest}
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
+
 async function ArticleContent({ slug, destination, iataCode }: {
   slug: string;
   destination: string | undefined;
   iataCode: string | undefined;
 }) {
-  // If destination + iata are provided (link from results), generate on demand
   if (destination && iataCode) {
     const article = await getOrGenerateArticle(iataCode, destination);
     return <ArticleBody body={article.body} />;
   }
 
-  // Otherwise look up by slug only (direct URL or journal listing link)
   const article = await db.journalArticle.findUnique({ where: { slug } });
   if (!article) notFound();
   return <ArticleBody body={article.body} />;
@@ -36,7 +61,7 @@ async function ArticleMeta({ slug, destination, iataCode }: {
 }) {
   if (destination && iataCode) {
     return (
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">
             {iataCode.toUpperCase()}
@@ -59,7 +84,7 @@ async function ArticleMeta({ slug, destination, iataCode }: {
   if (!article) return null;
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">
           {article.iataCode}
@@ -86,7 +111,7 @@ export default function JournalArticlePage({ params, searchParams }: Props) {
   const iataCode = searchParams.iata;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <Link
         href="/journal"
         className="inline-flex items-center gap-1 text-sm text-steel hover:text-ink mb-8 transition-colors"
@@ -97,10 +122,19 @@ export default function JournalArticlePage({ params, searchParams }: Props) {
 
       <Suspense
         fallback={
-          <div className="h-10 w-64 rounded-xl bg-surface animate-pulse mb-8" />
+          <div className="h-10 w-64 rounded-xl bg-surface animate-pulse mb-6" />
         }
       >
         <ArticleMeta slug={slug} destination={destination} iataCode={iataCode} />
+      </Suspense>
+
+      {/* Hero image — full width × 480px, between heading and body */}
+      <Suspense
+        fallback={
+          <div className="w-full rounded-lg bg-surface animate-pulse mb-8" style={{ height: 480 }} />
+        }
+      >
+        <ArticleHeroImage slug={slug} destination={destination} />
       </Suspense>
 
       <Suspense

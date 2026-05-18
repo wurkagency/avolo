@@ -37,7 +37,7 @@ async function ArticleGrid() {
 
 export default function JournalPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-8">
         <h1
           className="text-3xl font-bold text-ink"

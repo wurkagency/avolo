@@ -2,7 +2,7 @@
 // DELETE /api/profile/avatar — remove avatar, clear user.image
 
 import { NextResponse, type NextRequest } from "next/server";
-import { writeFile, unlink, mkdir } from "fs/promises";
+import { writeFile, unlink, mkdir, access } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { auth } from "@/lib/server/auth";
@@ -11,23 +11,39 @@ import { db } from "@/lib/server/db";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-// process.cwd() in standalone mode is the PM2 launch dir (APP_DIR), not the
-// standalone dir. Next.js standalone only serves public files from its own
-// standalone/public/ tree, so uploads written to APP_DIR/public/avatars/ would
-// 404. APP_ROOT must be set to the standalone dir in production.
-// e.g. APP_ROOT="/var/www/vhosts/avolo.app/httpdocs/.next/standalone"
-if (process.env.NODE_ENV === "production" && !process.env.APP_ROOT) {
-  console.warn("[avatar] APP_ROOT is not set — avatar uploads may be written to the wrong directory and return 404. Set APP_ROOT to the .next/standalone directory in your .env file.");
+// Resolve the directory where Next.js standalone serves static public files.
+// In production PM2 starts from APP_DIR, so process.cwd() = APP_DIR, not the
+// standalone dir. standalone/public/ is what the server actually serves from.
+// Detection order:
+//   1. APP_ROOT env var (explicit override, e.g. .next/standalone)
+//   2. process.cwd()/server.js exists → we're already inside standalone dir
+//   3. process.cwd()/.next/standalone exists → use that
+//   4. Fallback to process.cwd() (local dev, works fine)
+async function resolveAppRoot(): Promise<string> {
+  if (process.env.APP_ROOT) return process.env.APP_ROOT;
+  const cwd = process.cwd();
+  try {
+    await access(path.join(cwd, "server.js"));
+    return cwd; // already in standalone dir
+  } catch { /* not standalone dir */ }
+  try {
+    await access(path.join(cwd, ".next", "standalone"));
+    return path.join(cwd, ".next", "standalone");
+  } catch { /* no standalone dir */ }
+  return cwd; // local dev
 }
-const APP_ROOT = process.env.APP_ROOT ?? process.cwd();
-const AVATAR_DIR = path.join(APP_ROOT, "public", "avatars");
+
+// Resolved once at first request; cached for the process lifetime.
+let avatarDirPromise: Promise<string> | null = null;
+function getAvatarDir(): Promise<string> {
+  if (!avatarDirPromise) {
+    avatarDirPromise = resolveAppRoot().then((root) => path.join(root, "public", "avatars"));
+  }
+  return avatarDirPromise;
+}
 
 function safeUserId(userId: string): string {
   return path.basename(userId).replace(/[^a-zA-Z0-9_-]/g, "");
-}
-
-function avatarFilePath(userId: string): string {
-  return path.join(AVATAR_DIR, `${safeUserId(userId)}.webp`);
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -65,14 +81,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Could not process image — make sure it is a valid image file" }, { status: 422 });
   }
 
-  const safeId  = safeUserId(session.user.id);
+  const avatarDir = await getAvatarDir();
+  const safeId = safeUserId(session.user.id);
+  const filePath = path.join(avatarDir, `${safeId}.webp`);
   const imageUrl = `/avatars/${safeId}.webp?v=${Date.now()}`;
 
   try {
-    await mkdir(AVATAR_DIR, { recursive: true });
-    await writeFile(avatarFilePath(session.user.id), webp);
+    await mkdir(avatarDir, { recursive: true });
+    await writeFile(filePath, webp);
   } catch (err) {
-    console.error("[avatar] write failed:", err);
+    console.error("[avatar] write failed:", err, "dir:", avatarDir);
     return NextResponse.json({ error: "Failed to save image — check server write permissions" }, { status: 500 });
   }
 
@@ -93,7 +111,9 @@ export async function DELETE(): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await unlink(avatarFilePath(session.user.id)).catch(() => null);
+  const avatarDir = await getAvatarDir();
+  const filePath = path.join(avatarDir, `${safeUserId(session.user.id)}.webp`);
+  await unlink(filePath).catch(() => null);
 
   await db.user.update({
     where: { id: session.user.id },

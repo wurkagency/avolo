@@ -59,7 +59,7 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // Sync name and image from session when it loads
+  // Sync name, image, currency, language from session when it loads / updates
   useEffect(() => {
     if (session?.user?.name) setName(session.user.name);
   }, [session?.user?.name]);
@@ -67,6 +67,18 @@ export default function SettingsPage() {
   useEffect(() => {
     setAvatarSrc(session?.user?.image ?? null);
   }, [session?.user?.image]);
+
+  useEffect(() => {
+    const c = (session?.user as { currency?: string })?.currency as Currency | undefined;
+    if (c) setCurrencyLocal(c);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(session?.user as { currency?: string })?.currency]);
+
+  useEffect(() => {
+    const l = (session?.user as { language?: string })?.language as Language | undefined;
+    if (l) setLanguageLocal(l);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(session?.user as { language?: string })?.language]);
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -129,10 +141,9 @@ export default function SettingsPage() {
     setCurrencyLocal(c);
     try {
       await patchProfile({ currency: c });
-      // Update JWT token so next session read reflects new currency
       await updateSession({ currency: c });
-      // Update Zustand immediately for instant price re-renders
       setCurrency(c);
+      addToast("Currency updated", "success");
     } catch (err) {
       addToast(err instanceof Error ? err.message : "Failed to save currency", "error");
     }
@@ -144,6 +155,7 @@ export default function SettingsPage() {
       await patchProfile({ language: l });
       await updateSession({ language: l });
       setLanguage(l);
+      addToast("Language updated", "success");
     } catch (err) {
       addToast(err instanceof Error ? err.message : "Failed to save language", "error");
     }
@@ -217,7 +229,7 @@ export default function SettingsPage() {
           <button
             onClick={saveName}
             disabled={savingName || !name.trim()}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-deep transition-colors disabled:opacity-50"
           >
             {savingName ? "Saving…" : "Save"}
           </button>

@@ -14,8 +14,8 @@ export function ProfileSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full md:w-52 shrink-0">
-      <nav className="flex md:flex-col gap-1">
+    <aside className="w-full sm:w-44 shrink-0">
+      <nav className="flex sm:flex-col gap-1 overflow-x-auto sm:overflow-visible pb-1 sm:pb-0">
         {NAV.map(({ href, label, icon }) => {
           const active = pathname === href;
           return (

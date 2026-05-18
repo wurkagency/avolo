@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AvoloLogo } from "@/components/ui/AvoloLogo";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,6 +36,10 @@ function groupByDate(trips: TripSummary[]) {
   return { today, yesterday, earlier };
 }
 
+function fmtShort(dateStr: string): string {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(dateStr));
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function SectionLabel({ label }: { label: string }) {
   return (
@@ -45,32 +49,81 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
-function TripItem({ trip, active }: { trip: TripSummary; active: boolean }) {
+function TripItem({ trip, active, onDelete }: { trip: TripSummary; active: boolean; onDelete: (id: string) => void }) {
   const [hover, setHover] = useState(false);
-  const label = trip.destinationName || trip.destination || "Trip";
+  const [deleting, setDeleting] = useState(false);
+
+  const destination = trip.destinationName || trip.destination || "Trip";
+  const dateFrom = fmtShort(trip.departureDate);
+  const dateTo = trip.returnDate ? fmtShort(trip.returnDate) : null;
+  const label = dateTo ? `${destination}, ${dateFrom} – ${dateTo}` : `${destination}, ${dateFrom}`;
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleting(true);
+    try {
+      await fetch(`/api/trips/${encodeURIComponent(trip.id)}`, { method: "DELETE" });
+      onDelete(trip.id);
+    } catch {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <Link
-      href={`/trip/${trip.id}`}
-      aria-current={active ? "page" : undefined}
-      title={label}
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 2 }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{
-        ...t.bodySm,
-        display: "block",
-        padding: "5px var(--spacing-md)",
-        borderRadius: "var(--rounded-md)",
-        color: active ? "var(--color-primary)" : "var(--color-ink)",
-        backgroundColor: active || hover ? "var(--color-cream)" : "transparent",
-        textDecoration: "none",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        transition: "background-color 100ms",
-      }}
     >
-      {label}
-    </Link>
+      <Link
+        href={`/trip/${trip.id}`}
+        aria-current={active ? "page" : undefined}
+        title={label}
+        style={{
+          ...t.bodySm,
+          flex: 1,
+          minWidth: 0,
+          display: "block",
+          padding: "5px var(--spacing-xs) 5px var(--spacing-md)",
+          borderRadius: "var(--rounded-md)",
+          color: active ? "var(--color-primary)" : "var(--color-ink)",
+          backgroundColor: active || hover ? "var(--color-cream)" : "transparent",
+          textDecoration: "none",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          transition: "background-color 100ms",
+        }}
+      >
+        {label}
+      </Link>
+      <button
+        onClick={(e) => void handleDelete(e)}
+        disabled={deleting}
+        title="Remove search"
+        style={{
+          flexShrink: 0,
+          width: 20,
+          height: 20,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "none",
+          border: "none",
+          borderRadius: "var(--rounded-xs)",
+          cursor: "pointer",
+          color: "var(--color-stone)",
+          padding: 0,
+          opacity: hover ? 1 : 0,
+          transition: "opacity 100ms",
+          pointerEvents: hover ? "auto" : "none",
+        }}
+        aria-hidden={!hover}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 13 }} aria-hidden="true">close</span>
+      </button>
+    </div>
   );
 }
 
@@ -153,12 +206,129 @@ function RailNewTripButton() {
   );
 }
 
+// ─── User menu dropdown ───────────────────────────────────────────────────────
+const MENU_ITEMS = [
+  { href: "/profile/settings",      icon: "manage_accounts", label: "Settings"      },
+  { href: "/profile/preferences",   icon: "tune",            label: "Preferences"   },
+  { href: "/profile/notifications", icon: "notifications",   label: "Notifications" },
+] as const;
+
+function UserMenu() {
+  const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  if (!session) return null;
+
+  return (
+    <div ref={ref} style={{ flexShrink: 0, position: "relative" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        title="Account menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 4,
+          color: "var(--color-steel)",
+          display: "flex",
+          alignItems: "center",
+          borderRadius: "var(--rounded-sm)",
+        }}
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">more_horiz</span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          style={{
+            position: "absolute",
+            bottom: "calc(100% + 6px)",
+            right: 0,
+            width: 188,
+            backgroundColor: "var(--color-canvas)",
+            border: "1px solid var(--color-hairline-soft)",
+            borderRadius: "var(--rounded-lg)",
+            boxShadow: "rgba(0,0,0,0.08) 0px 4px 16px -2px",
+            padding: "var(--spacing-xxs)",
+            zIndex: 300,
+          }}
+        >
+          {MENU_ITEMS.map(({ href, icon, label }) => (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              style={{
+                ...t.bodySm,
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--spacing-sm)",
+                padding: "var(--spacing-xs) var(--spacing-sm)",
+                borderRadius: "var(--rounded-md)",
+                color: "var(--color-ink)",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--color-surface)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--color-steel)" }} aria-hidden="true">{icon}</span>
+              {label}
+            </Link>
+          ))}
+
+          {/* Divider */}
+          <div style={{ height: 1, backgroundColor: "var(--color-hairline-soft)", margin: "var(--spacing-xxs) 0" }} />
+
+          <button
+            role="menuitem"
+            onClick={() => { setOpen(false); void signOut({ callbackUrl: "/" }); }}
+            style={{
+              ...t.bodySm,
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--spacing-sm)",
+              padding: "var(--spacing-xs) var(--spacing-sm)",
+              borderRadius: "var(--rounded-md)",
+              color: "var(--color-ink)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              width: "100%",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--color-surface)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--color-steel)" }} aria-hidden="true">logout</span>
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 interface SidebarProps {
   variant?: SidebarVariant;
+  onClose?: () => void;
 }
 
-export function Sidebar({ variant = "full" }: SidebarProps) {
+export function Sidebar({ variant = "full", onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [grouped, setGrouped] = useState<ReturnType<typeof groupByDate>>({ today: [], yesterday: [], earlier: [] });
@@ -178,6 +348,15 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
       })
       .catch(() => null);
   }, []);
+
+  function handleDeleteTrip(id: string) {
+    setGrouped(prev => {
+      const filter = (arr: TripSummary[]) => arr.filter(t => t.id !== id);
+      const next = { today: filter(prev.today), yesterday: filter(prev.yesterday), earlier: filter(prev.earlier) };
+      setTotal(next.today.length + next.yesterday.length + next.earlier.length);
+      return next;
+    });
+  }
 
   const groups = [
     { label: "Today",     items: grouped.today     },
@@ -206,8 +385,8 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
         flexShrink: 0,
         display: "flex",
         alignItems: "center",
-        justifyContent: rail ? "center" : "flex-start",
-        padding: rail ? 0 : "0 var(--spacing-xl)",
+        justifyContent: rail ? "center" : "space-between",
+        padding: rail ? 0 : "0 var(--spacing-md) 0 var(--spacing-xl)",
         borderBottom: "1px solid var(--color-hairline-soft)",
       }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
@@ -216,6 +395,28 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
             : <AvoloLogo height={18} />
           }
         </Link>
+
+        {/* Close button — only shown in mobile drawer (onClose provided) */}
+        {!rail && onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close navigation"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 6,
+              color: "var(--color-steel)",
+              borderRadius: "var(--rounded-sm)",
+              flexShrink: 0,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }} aria-hidden="true">close</span>
+          </button>
+        )}
       </div>
 
       {/* ── Scrollable body ── */}
@@ -282,7 +483,7 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
           <div key={label}>
             <SectionLabel label={label} />
             {items.map(trip => (
-              <TripItem key={trip.id} trip={trip} active={isActive(`/trip/${trip.id}`)} />
+              <TripItem key={trip.id} trip={trip} active={isActive(`/trip/${trip.id}`)} onDelete={handleDeleteTrip} />
             ))}
           </div>
         ))}
@@ -293,20 +494,13 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
       {/* ── Bottom strip ── */}
       <div style={{ flexShrink: 0, borderTop: "1px solid var(--color-hairline-soft)" }}>
 
-        {session && (
-          <div style={{ padding: "var(--spacing-sm) var(--spacing-xs) 0" }}>
-            <NavItem href="/profile/settings" icon="settings" label="Settings" active={isActive("/profile/settings")} rail={rail} />
-          </div>
-        )}
-
         {/* User strip */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: "var(--spacing-sm)",
-          padding: rail ? "var(--spacing-md) 0" : "var(--spacing-md) var(--spacing-xl)",
+          padding: rail ? "var(--spacing-md) 0" : "var(--spacing-md) var(--spacing-md)",
           justifyContent: rail ? "center" : "flex-start",
-          borderTop: "1px solid var(--color-hairline-soft)",
         }}>
           {session ? (
             <>
@@ -321,7 +515,6 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
                 position: "relative",
                 ...t.captionBold,
                 color: "var(--color-ink)",
-                cursor: rail ? "pointer" : "default",
               }}
               title={rail ? (session.user?.name ?? session.user?.email ?? undefined) : undefined}
               >
@@ -351,13 +544,7 @@ export function Sidebar({ variant = "full" }: SidebarProps) {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    title="Sign out"
-                    style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--color-steel)", display: "flex", alignItems: "center" }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }} aria-hidden="true">more_horiz</span>
-                  </button>
+                  <UserMenu />
                 </>
               )}
             </>
