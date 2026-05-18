@@ -200,7 +200,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const todayIso = today.toISOString().slice(0, 10);
 
     const prompt = buildQueryPrompt(trimmed, todayIso);
-    const rawAI  = await callAI(prompt);
+
+    let rawAI: string;
+    try {
+      rawAI = await callAI(prompt);
+    } catch {
+      // All AI providers unavailable — return empty result so wizard uses manual form
+      return NextResponse.json({ filledFields: [] }, { status: 200 });
+    }
+
     const cleaned = extractJson(rawAI);
 
     let parsed: unknown;

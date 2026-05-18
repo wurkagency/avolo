@@ -1,46 +1,19 @@
-// POST /api/profile/avatar  — upload, resize to 256×256, convert to WebP, save to public/avatars/
+// POST /api/profile/avatar  — upload, resize to 256×256, convert to WebP, save to uploads/avatars/
 // DELETE /api/profile/avatar — remove avatar, clear user.image
+//
+// Avatars are stored in uploads/avatars/ (outside .next/) so they survive deploys.
+// Served via /api/avatar/[id] route. Override directory with AVATAR_DIR env var.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { writeFile, unlink, mkdir, access } from "fs/promises";
+import { writeFile, unlink, mkdir } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 import { auth } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
+import { getAvatarDir } from "@/lib/server/avatarDir";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-
-// Resolve the directory where Next.js standalone serves static public files.
-// In production PM2 starts from APP_DIR, so process.cwd() = APP_DIR, not the
-// standalone dir. standalone/public/ is what the server actually serves from.
-// Detection order:
-//   1. APP_ROOT env var (explicit override, e.g. .next/standalone)
-//   2. process.cwd()/server.js exists → we're already inside standalone dir
-//   3. process.cwd()/.next/standalone exists → use that
-//   4. Fallback to process.cwd() (local dev, works fine)
-async function resolveAppRoot(): Promise<string> {
-  if (process.env.APP_ROOT) return process.env.APP_ROOT;
-  const cwd = process.cwd();
-  try {
-    await access(path.join(cwd, "server.js"));
-    return cwd; // already in standalone dir
-  } catch { /* not standalone dir */ }
-  try {
-    await access(path.join(cwd, ".next", "standalone"));
-    return path.join(cwd, ".next", "standalone");
-  } catch { /* no standalone dir */ }
-  return cwd; // local dev
-}
-
-// Resolved once at first request; cached for the process lifetime.
-let avatarDirPromise: Promise<string> | null = null;
-function getAvatarDir(): Promise<string> {
-  if (!avatarDirPromise) {
-    avatarDirPromise = resolveAppRoot().then((root) => path.join(root, "public", "avatars"));
-  }
-  return avatarDirPromise;
-}
 
 function safeUserId(userId: string): string {
   return path.basename(userId).replace(/[^a-zA-Z0-9_-]/g, "");
@@ -81,10 +54,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Could not process image — make sure it is a valid image file" }, { status: 422 });
   }
 
-  const avatarDir = await getAvatarDir();
+  const avatarDir = getAvatarDir();
   const safeId = safeUserId(session.user.id);
   const filePath = path.join(avatarDir, `${safeId}.webp`);
-  const imageUrl = `/avatars/${safeId}.webp?v=${Date.now()}`;
+  const imageUrl = `/api/avatar/${safeId}?v=${Date.now()}`;
 
   try {
     await mkdir(avatarDir, { recursive: true });
@@ -111,7 +84,7 @@ export async function DELETE(): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const avatarDir = await getAvatarDir();
+  const avatarDir = getAvatarDir();
   const filePath = path.join(avatarDir, `${safeUserId(session.user.id)}.webp`);
   await unlink(filePath).catch(() => null);
 
