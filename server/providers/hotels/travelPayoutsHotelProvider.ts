@@ -5,6 +5,52 @@ import type { SearchRequest } from "@/types/search";
 
 const BASE = "https://engine.hotellook.com/api/v2";
 
+// Hotellook requires city IATA codes, not airport IATA codes.
+// For single-airport cities (CPH, AMS, BCN) these are the same.
+// For multi-airport cities (London = LON, Paris = PAR, etc.) we must map.
+const AIRPORT_TO_CITY: Record<string, string> = {
+  // United Kingdom
+  LHR: "LON", LGW: "LON", LCY: "LON", STN: "LON", LTN: "LON",
+  // France
+  CDG: "PAR", ORY: "PAR",
+  // USA – New York
+  JFK: "NYC", EWR: "NYC", LGA: "NYC",
+  // USA – Chicago
+  ORD: "CHI", MDW: "CHI",
+  // USA – Dallas
+  DFW: "DFW", DAL: "DFW",
+  // USA – Washington DC
+  IAD: "WAS", DCA: "WAS", BWI: "WAS",
+  // USA – Houston
+  IAH: "HOU", HOU: "HOU",
+  // Japan – Tokyo
+  NRT: "TYO", HND: "TYO",
+  // China – Shanghai
+  PVG: "SHA", SHA: "SHA",
+  // China – Beijing
+  PEK: "BJS", PKX: "BJS",
+  // Italy – Rome
+  FCO: "ROM", CIA: "ROM",
+  // Italy – Milan
+  MXP: "MIL", LIN: "MIL", BGY: "MIL",
+  // Sweden – Stockholm
+  ARN: "STO", BMA: "STO", NYO: "STO",
+  // Brazil – São Paulo
+  GRU: "SAO", CGH: "SAO", VCP: "SAO",
+  // Turkey – Istanbul
+  SAW: "IST",
+  // Germany – Berlin
+  BER: "BER", TXL: "BER", SXF: "BER",
+  // Russia – Moscow
+  SVO: "MOW", DME: "MOW", VKO: "MOW",
+  // UAE – Dubai
+  DXB: "DXB", DWC: "DXB",
+};
+
+function toCityIata(airportCode: string): string {
+  return AIRPORT_TO_CITY[airportCode.toUpperCase()] ?? airportCode;
+}
+
 // ─── Raw Hotellook shapes ──────────────────────────────────────────────────
 
 export interface HotellookHotelRaw {
@@ -71,6 +117,8 @@ export async function fetchTravelPayoutsHotels(
   const childrenCount = req.children.length;
   const childrenAges = req.children;
 
+  const cityIata = toCityIata(req.destination);
+
   // Step 1: start search
   const startRes = await fetch(`${BASE}/search/start.json`, {
     method: "POST",
@@ -80,7 +128,7 @@ export async function fetchTravelPayoutsHotels(
     },
     body: JSON.stringify({
       query: {
-        destination: req.destination, // IATA or city name
+        destination: cityIata, // city IATA code (mapped from airport code)
         checkIn,
         checkOut,
         adultsCount,
@@ -100,8 +148,8 @@ export async function fetchTravelPayoutsHotels(
   const searchId = startBody.searchId;
   if (!searchId) throw new Error("Hotellook: no searchId in start response");
 
-  // Step 2: poll for results (max 4 attempts, 2s apart)
-  for (let attempt = 0; attempt < 4; attempt++) {
+  // Step 2: poll for results (max 6 attempts, 2s apart = up to 12s)
+  for (let attempt = 0; attempt < 6; attempt++) {
     if (attempt > 0) {
       await new Promise<void>((r) => setTimeout(r, 2000));
     }

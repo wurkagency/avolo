@@ -10,6 +10,41 @@ import { parseDuration } from "./duffelProvider";
 // Static GBP→EUR fallback rate (real conversion via currencyapi.com in Phase 7)
 const GBP_TO_EUR = 1.17;
 
+// IATA airline code → full name for TravelPayouts responses.
+// TravelPayouts returns the 2-letter IATA code in the `airline` field.
+const AIRLINE_NAMES: Record<string, string> = {
+  // Europe
+  LH: "Lufthansa",      BA: "British Airways", AF: "Air France",
+  KL: "KLM",            SK: "SAS",             IB: "Iberia",
+  VY: "Vueling",        FR: "Ryanair",         U2: "easyJet",
+  W6: "Wizz Air",       DY: "Norwegian",       TP: "TAP Air Portugal",
+  AY: "Finnair",        LX: "SWISS",           OS: "Austrian",
+  SN: "Brussels Airlines", EI: "Aer Lingus",  BT: "airBaltic",
+  PS: "Ukraine International", RO: "TAROM",   OK: "Czech Airlines",
+  TK: "Turkish Airlines", PC: "Pegasus",
+  // Middle East & Asia
+  EK: "Emirates",       QR: "Qatar Airways",   EY: "Etihad Airways",
+  FZ: "flydubai",       WY: "Oman Air",        GF: "Gulf Air",
+  AI: "Air India",      SQ: "Singapore Airlines", CX: "Cathay Pacific",
+  NH: "ANA",            JL: "Japan Airlines",  OZ: "Asiana Airlines",
+  KE: "Korean Air",     CI: "China Airlines",  CA: "Air China",
+  MU: "China Eastern",  CZ: "China Southern",
+  // Americas
+  AA: "American Airlines", DL: "Delta Air Lines", UA: "United Airlines",
+  WN: "Southwest Airlines", B6: "JetBlue",      AS: "Alaska Airlines",
+  AC: "Air Canada",         AM: "Aeromexico",   LA: "LATAM Airlines",
+  CM: "Copa Airlines",      AV: "Avianca",
+  // Africa & Oceania
+  QF: "Qantas",         NZ: "Air New Zealand", VA: "Virgin Australia",
+  ET: "Ethiopian Airlines", KQ: "Kenya Airways", SA: "South African Airways",
+  // Russia / CIS
+  SU: "Aeroflot",       S7: "S7 Airlines",     UT: "UTair",
+};
+
+export function resolveAirlineName(iataCode: string): string {
+  return AIRLINE_NAMES[iataCode.toUpperCase()] ?? iataCode;
+}
+
 function currencyToEur(amount: number, currency: string): number {
   const upper = currency.toUpperCase();
   if (upper === "EUR") return amount;
@@ -48,7 +83,7 @@ export function normalizeTravelPayoutsFlights(
       aiSlot: null,
       aiSummary: null,
       flight: {
-        airline: item.airline,
+        airline: resolveAirlineName(item.airline),
         airlineCode: item.airline,
         stops,
         durationMinutes: item.duration,

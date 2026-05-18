@@ -63,6 +63,11 @@ export function ExcursionCard({ result, tripId }: ExcursionCardProps) {
           </div>
           <div className="flex flex-wrap gap-1.5 shrink-0">
             {result.aiSlot && <SlotBadge slot={result.aiSlot} isPrimary={result.rank === 0} />}
+            {result.provider === "stub" && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700" title="No live excursion data — showing suggested activities">
+                Estimated
+              </span>
+            )}
             <RiskBadge level={result.riskLevel} reasons={result.riskReasons} />
           </div>
         </div>
