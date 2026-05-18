@@ -364,7 +364,7 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
     { label: "Earlier",   items: grouped.earlier   },
   ].filter(g => g.items.length > 0);
 
-  const sidebarWidth = rail ? 64 : 280;
+  const sidebarWidth: number | string = rail ? 64 : (onClose ? "80vw" : 280);
 
   return (
     <aside style={{
@@ -504,36 +504,48 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
         }}>
           {session ? (
             <>
-              <div style={{
-                width: 32, height: 32,
-                borderRadius: "var(--rounded-full)",
-                overflow: "hidden",
-                backgroundColor: "var(--color-cream)",
-                border: "1px solid var(--color-beige-deep)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-                position: "relative",
-                ...t.captionBold,
-                color: "var(--color-ink)",
-              }}
-              title={rail ? (session.user?.name ?? session.user?.email ?? undefined) : undefined}
+              {/* Clickable area: avatar + name → /profile/settings */}
+              <Link
+                href="/profile/settings"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--spacing-sm)",
+                  flex: rail ? undefined : 1,
+                  minWidth: 0,
+                  textDecoration: "none",
+                  borderRadius: "var(--rounded-md)",
+                }}
+                title={rail ? "Profile settings" : undefined}
               >
-                {session.user?.image ? (
-                  <Image
-                    src={session.user.image}
-                    alt=""
-                    fill
-                    sizes="32px"
-                    style={{ objectFit: "cover" }}
-                    unoptimized
-                  />
-                ) : (
-                  (session.user?.name ?? session.user?.email ?? "U").charAt(0).toUpperCase()
-                )}
-              </div>
+                <div style={{
+                  width: 32, height: 32,
+                  borderRadius: "var(--rounded-full)",
+                  overflow: "hidden",
+                  backgroundColor: "var(--color-cream)",
+                  border: "1px solid var(--color-beige-deep)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  position: "relative",
+                  ...t.captionBold,
+                  color: "var(--color-ink)",
+                }}
+                >
+                  {session.user?.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt=""
+                      fill
+                      sizes="32px"
+                      style={{ objectFit: "cover" }}
+                      unoptimized
+                    />
+                  ) : (
+                    (session.user?.name ?? session.user?.email ?? "U").charAt(0).toUpperCase()
+                  )}
+                </div>
 
-              {!rail && (
-                <>
+                {!rail && (
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ ...t.caption, fontWeight: 500, color: "var(--color-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {session.user?.name ?? session.user?.email}
@@ -544,9 +556,10 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
                       </div>
                     )}
                   </div>
-                  <UserMenu />
-                </>
-              )}
+                )}
+              </Link>
+
+              {!rail && <UserMenu />}
             </>
           ) : (
             <Link

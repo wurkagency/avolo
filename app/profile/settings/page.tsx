@@ -224,7 +224,7 @@ export default function SettingsPage() {
             onKeyDown={(e) => e.key === "Enter" && void saveName()}
             maxLength={100}
             placeholder="Your name"
-            className="flex-1 rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-steel focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 rounded-md border border-hairline bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-steel focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <button
             onClick={saveName}
@@ -284,7 +284,7 @@ export default function SettingsPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage || removingImage}
-              className="flex items-center gap-2 rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 rounded-md border border-hairline px-4 py-2 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
             >
               <span
                 className="material-symbols-outlined text-base"
@@ -299,7 +299,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleAvatarRemove}
                 disabled={uploadingImage || removingImage}
-                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-steel hover:bg-surface transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-steel hover:bg-surface transition-colors disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
                 {removingImage ? "Removing…" : "Remove photo"}
@@ -326,7 +326,7 @@ export default function SettingsPage() {
             <select
               value={currency}
               onChange={(e) => void handleCurrencyChange(e.target.value as Currency)}
-              className="rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+              className="rounded-md border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {CURRENCIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
@@ -341,7 +341,7 @@ export default function SettingsPage() {
             <select
               value={language}
               onChange={(e) => void handleLanguageChange(e.target.value as Language)}
-              className="rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
+              className="rounded-md border border-hairline bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {LANGUAGES.map((l) => (
                 <option key={l.value} value={l.value}>{l.label}</option>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 rounded-xl border border-hairline px-5 py-2.5 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md border border-hairline px-5 py-2.5 text-sm font-medium text-ink hover:bg-surface transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">download</span>
             {exporting ? "Exporting…" : "Export my data"}
@@ -367,7 +367,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="flex items-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-2 rounded-md border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">delete_forever</span>
             Delete my account
@@ -394,7 +394,7 @@ export default function SettingsPage() {
           onChange={(e) => setDeleteEmail(e.target.value)}
           placeholder="your@email.com"
           autoComplete="off"
-          className="w-full rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm text-ink mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full rounded-md border border-hairline bg-surface px-4 py-2.5 text-sm text-ink mb-4 focus:outline-none focus:ring-2 focus:ring-red-500"
         />
         <div className="flex gap-3 justify-end">
           <button

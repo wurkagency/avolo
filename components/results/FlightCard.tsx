@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { NormalizedResult } from "@/types/search";
 import { useCurrency } from "@/lib/hooks/useCurrency";
@@ -16,6 +17,17 @@ interface FlightCardProps {
 export function FlightCard({ result, tripId }: FlightCardProps) {
   const { format } = useCurrency();
   const f = result.flight;
+  const [bgImage, setBgImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!f?.arrivalAirport) return;
+    const q = encodeURIComponent(`${f.arrivalAirport} destination travel`);
+    fetch(`/api/photos/unsplash?query=${q}&count=1`)
+      .then((r) => r.json())
+      .then((d) => { const url = (d.photos as string[])[0]; if (url) setBgImage(url); })
+      .catch(() => null);
+  }, [f?.arrivalAirport]);
+
   if (!f) return null;
 
   const stopLabel = f.stops === 0 ? "Non-stop" : f.stops === 1 ? "1 stop" : `${f.stops} stops`;
@@ -24,25 +36,31 @@ export function FlightCard({ result, tripId }: FlightCardProps) {
 
   return (
     <article className="bg-canvas border border-hairline rounded-lg overflow-hidden flex min-h-[120px]">
-      {/* Airline logo */}
+      {/* Destination bg + airline logo overlay */}
       <Link
         href={`/results/flights/${encodeURIComponent(result.id)}?tripId=${encodeURIComponent(tripId)}`}
-        className="w-40 shrink-0 flex items-center justify-center bg-surface p-4"
+        className="w-40 shrink-0 relative flex items-center justify-center bg-surface overflow-hidden"
         tabIndex={-1}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoUrl}
-          alt={f.airline}
-          className="max-w-full max-h-12 object-contain"
-          onError={(e) => {
-            const el = e.currentTarget;
-            el.style.display = "none";
-            const fallback = el.nextElementSibling as HTMLElement | null;
-            if (fallback) fallback.style.display = "block";
-          }}
-        />
-        <span className="text-sm font-bold text-steel hidden">{f.airlineCode}</span>
+        {bgImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={bgImage} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+        )}
+        <div className="relative z-10 flex flex-col items-center gap-1 p-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoUrl}
+            alt={f.airline}
+            className="max-w-[96px] max-h-10 object-contain drop-shadow-md"
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = "none";
+              const fallback = el.nextElementSibling as HTMLElement | null;
+              if (fallback) fallback.style.display = "block";
+            }}
+          />
+          <span className="text-xs font-bold text-steel hidden">{f.airlineCode}</span>
+        </div>
       </Link>
 
       {/* Content */}

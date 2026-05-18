@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { NormalizedResult } from "@/types/search";
 import { useCurrency } from "@/lib/hooks/useCurrency";
@@ -16,9 +17,21 @@ interface CarCardProps {
 export function CarCard({ result, tripId }: CarCardProps) {
   const { format } = useCurrency();
   const c = result.car;
+  const [fallbackImg, setFallbackImg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!c || c.imageUrl) return;
+    const q = encodeURIComponent(`${c.make} ${c.model} car`);
+    fetch(`/api/photos/unsplash?query=${q}&count=1`)
+      .then((r) => r.json())
+      .then((d) => { const url = (d.photos as string[])[0]; if (url) setFallbackImg(url); })
+      .catch(() => null);
+  }, [c?.make, c?.model, c?.imageUrl]);
+
   if (!c) return null;
 
   const summary = `${c.make} ${c.model} · ${c.category} · ${c.supplier}`;
+  const displayImg = c.imageUrl ?? fallbackImg;
 
   return (
     <article className="bg-canvas border border-hairline rounded-lg overflow-hidden flex min-h-[120px]">
@@ -28,9 +41,9 @@ export function CarCard({ result, tripId }: CarCardProps) {
         className="w-40 shrink-0 bg-surface overflow-hidden"
         tabIndex={-1}
       >
-        {c.imageUrl ? (
+        {displayImg ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={c.imageUrl} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
+          <img src={displayImg} alt={`${c.make} ${c.model}`} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="material-symbols-outlined text-3xl text-steel/40">directions_car</span>

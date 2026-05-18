@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { useSession } from "next-auth/react";
 import { Sidebar } from "./Sidebar";
 import { ShellTopBar } from "./ShellTopBar";
 import { SunsetStripeBand } from "@/components/ui/SunsetStripeBand";
 import { AvoloLogo } from "@/components/ui/AvoloLogo";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
+import { useUserStore } from "@/lib/state/userStore";
+
+type Currency = "EUR" | "USD" | "GBP" | "DKK" | "SEK" | "NOK";
+type Language = "EN" | "DE" | "DA" | "SV" | "NO";
 
 interface AppShellProps {
   children: ReactNode;
@@ -16,6 +21,21 @@ interface AppShellProps {
 export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
   const bp = useBreakpoint();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const { setCurrency, setLanguage } = useUserStore();
+
+  // Sync session preferences → Zustand on every session load (covers new devices)
+  useEffect(() => {
+    const c = (session?.user as { currency?: string })?.currency as Currency | undefined;
+    if (c) setCurrency(c);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(session?.user as { currency?: string })?.currency]);
+
+  useEffect(() => {
+    const l = (session?.user as { language?: string })?.language as Language | undefined;
+    if (l) setLanguage(l);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(session?.user as { language?: string })?.language]);
 
   const isMobile = bp === "xs" || bp === "sm";
   const isRail   = bp === "md";
@@ -79,7 +99,7 @@ export function AppShell({ children, topBarLeft, topBarRight }: AppShellProps) {
         minWidth: 0,
       }}>
         <ShellTopBar
-          left={isMobile ? <AvoloLogo height={16} /> : topBarLeft}
+          left={isMobile ? <AvoloLogo height={20} /> : topBarLeft}
           right={topBarRight}
           onMenuToggle={isMobile ? () => setMobileOpen(o => !o) : undefined}
         />

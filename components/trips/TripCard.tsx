@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUiStore } from "@/lib/state/uiStore";
@@ -43,8 +43,18 @@ export function TripCard({ trip }: TripCardProps) {
   const { format } = useCurrency();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const addToast = useUiStore((s) => s.addToast);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!trip.destinationName) return;
+    const q = encodeURIComponent(`${trip.destinationName} travel highlights`);
+    fetch(`/api/photos/unsplash?query=${q}&count=1`)
+      .then((r) => r.json())
+      .then((d) => { const url = (d.photos as string[])[0]; if (url) setThumbnail(url); })
+      .catch(() => null);
+  }, [trip.destinationName]);
 
   async function handleDelete() {
     setDeleting(true);
@@ -68,93 +78,121 @@ export function TripCard({ trip }: TripCardProps) {
 
   return (
     <>
-      <article className="bg-surface border border-hairline rounded-lg p-5 flex flex-col gap-4 hover:border-primary/30 transition-colors">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <Link href={`/trip/${trip.id}`} className="hover:text-primary transition-colors">
-              <h2
-                className="font-semibold text-ink text-base leading-tight"
-                style={{ fontFamily: "var(--font-editorial)" }}
-              >
-                {trip.departureName} → {trip.destinationName}
-              </h2>
-            </Link>
-            <p className="text-xs text-steel mt-1">
-              {formatDate(trip.departureDate)}
-              {trip.returnDate ? ` – ${formatDate(trip.returnDate)}` : " (one-way)"}
-              {" · "}
-              {trip.adults} adult{trip.adults !== 1 ? "s" : ""}
-            </p>
-          </div>
+      <article className="bg-canvas border border-hairline rounded-lg overflow-hidden hover:border-primary/30 transition-colors">
 
-          {/* Status badge */}
-          {isSearching && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Searching
-            </span>
-          )}
-          {trip.status === "STALE" && (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-              Prices may be outdated
-            </span>
-          )}
-        </div>
-
-        {/* Service icons */}
-        <div className="flex gap-2">
-          {trip.services.map((svc) => (
-            <span
-              key={svc}
-              title={svc.charAt(0) + svc.slice(1).toLowerCase()}
-              className="material-symbols-outlined text-steel"
-              style={{ fontSize: "20px", fontVariationSettings: "'FILL' 0, 'wght' 300" }}
-              aria-label={svc.toLowerCase()}
-            >
-              {SERVICE_ICONS[svc]}
-            </span>
-          ))}
-        </div>
-
-        {/* Price row */}
-        {canRefresh && trip.totalPriceEur !== null && (
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-primary">{format(trip.totalPriceEur!)}</span>
-            <span className="text-xs text-steel">estimated total</span>
-          </div>
+        {/* Mobile-only: full-width image above content */}
+        {thumbnail && (
+          <Link href={`/trip/${trip.id}`} className="block sm:hidden h-36 bg-surface overflow-hidden" tabIndex={-1}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={thumbnail} alt={trip.destinationName} className="w-full h-full object-cover" />
+          </Link>
         )}
 
-        {/* Footer row */}
-        <div className="flex items-center justify-between border-t border-hairline pt-3 gap-3 flex-wrap">
-          <div className="flex items-center gap-4">
-            {canRefresh && (
-              <RefreshPricesButton
-                tripId={trip.id}
-                onRefreshed={() => queryClient.invalidateQueries({ queryKey: ["trips"] })}
-              />
+        <div className="flex min-h-[120px]">
+          {/* Desktop-only: left thumbnail panel */}
+          <Link
+            href={`/trip/${trip.id}`}
+            className="hidden sm:flex w-40 shrink-0 items-center justify-center bg-surface overflow-hidden"
+            tabIndex={-1}
+          >
+            {thumbnail ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={thumbnail} alt={trip.destinationName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-3xl text-steel/40" aria-hidden="true">luggage</span>
             )}
-            <span className="text-xs text-steel">
-              {trip.lastRefreshedAt
-                ? `Refreshed ${formatRelativeTime(trip.lastRefreshedAt)}`
-                : `Added ${formatRelativeTime(trip.createdAt)}`}
-            </span>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/trip/${trip.id}`}
-              className="rounded-md border border-hairline px-4 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
-            >
-              View details
-            </Link>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="rounded-full p-1.5 text-steel hover:text-red-600 hover:bg-red-50 transition-colors"
-              aria-label="Remove this trip"
-            >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">delete_outline</span>
-            </button>
+          {/* Content */}
+          <div className="flex-1 p-4 sm:p-5 flex flex-col gap-3 min-w-0">
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link href={`/trip/${trip.id}`} className="hover:text-primary transition-colors">
+                  <h2
+                    className="font-semibold text-ink text-base leading-tight"
+                    style={{ fontFamily: "var(--font-editorial)" }}
+                  >
+                    {trip.departureName} → {trip.destinationName}
+                  </h2>
+                </Link>
+                <p className="text-xs text-steel mt-1">
+                  {formatDate(trip.departureDate)}
+                  {trip.returnDate ? ` – ${formatDate(trip.returnDate)}` : " (one-way)"}
+                  {" · "}
+                  {trip.adults} adult{trip.adults !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {/* Status badge */}
+              {isSearching && (
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  Searching
+                </span>
+              )}
+              {trip.status === "STALE" && (
+                <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                  Prices may be outdated
+                </span>
+              )}
+            </div>
+
+            {/* Service icons */}
+            <div className="flex gap-2">
+              {trip.services.map((svc) => (
+                <span
+                  key={svc}
+                  title={svc.charAt(0) + svc.slice(1).toLowerCase()}
+                  className="material-symbols-outlined text-steel"
+                  style={{ fontSize: "20px", fontVariationSettings: "'FILL' 0, 'wght' 300" }}
+                  aria-label={svc.toLowerCase()}
+                >
+                  {SERVICE_ICONS[svc]}
+                </span>
+              ))}
+            </div>
+
+            {/* Price row */}
+            {canRefresh && trip.totalPriceEur !== null && (
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-primary">{format(trip.totalPriceEur!)}</span>
+                <span className="text-xs text-steel">estimated total</span>
+              </div>
+            )}
+
+            {/* Footer row */}
+            <div className="flex items-center justify-between border-t border-hairline pt-3 gap-3 flex-wrap mt-auto">
+              <div className="flex items-center gap-4">
+                {canRefresh && (
+                  <RefreshPricesButton
+                    tripId={trip.id}
+                    onRefreshed={() => queryClient.invalidateQueries({ queryKey: ["trips"] })}
+                  />
+                )}
+                <span className="text-xs text-steel">
+                  {trip.lastRefreshedAt
+                    ? `Refreshed ${formatRelativeTime(trip.lastRefreshedAt)}`
+                    : `Added ${formatRelativeTime(trip.createdAt)}`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  href={`/trip/${trip.id}`}
+                  className="rounded-md border border-hairline px-4 py-1.5 text-xs font-medium text-ink hover:bg-surface transition-colors"
+                >
+                  View details
+                </Link>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="rounded-full p-1.5 text-steel hover:text-red-600 hover:bg-red-50 transition-colors"
+                  aria-label="Remove this trip"
+                >
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">delete_outline</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </article>
