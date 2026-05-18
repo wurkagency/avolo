@@ -259,8 +259,8 @@ export async function runSearch(
     ? fetchAndRankFlights(req, emit)
         .then(([results, hasReal]) => {
           realDataFlags["FLIGHT"] = hasReal;
-          emit({ event: "category", type: "FLIGHT", results: hasReal ? results : [] });
-          if (hasReal) allResults.push(...results);
+          emit({ event: "category", type: "FLIGHT", results });
+          allResults.push(...results);
           return results;
         })
         .catch((err) => {
@@ -275,8 +275,8 @@ export async function runSearch(
     ? fetchAndRankHotels(req, emit)
         .then(([results, hasReal]) => {
           realDataFlags["HOTEL"] = hasReal;
-          emit({ event: "category", type: "HOTEL", results: hasReal ? results : [] });
-          if (hasReal) allResults.push(...results);
+          emit({ event: "category", type: "HOTEL", results });
+          allResults.push(...results);
           return results;
         })
         .catch((err) => {
@@ -291,8 +291,8 @@ export async function runSearch(
     ? fetchAndRankCars(req, emit)
         .then(([results, hasReal]) => {
           realDataFlags["CAR"] = hasReal;
-          emit({ event: "category", type: "CAR", results: hasReal ? results : [] });
-          if (hasReal) allResults.push(...results);
+          emit({ event: "category", type: "CAR", results });
+          allResults.push(...results);
           return results;
         })
         .catch((err) => {
@@ -307,8 +307,8 @@ export async function runSearch(
     ? fetchAndRankExcursions(req, emit)
         .then(([results, hasReal]) => {
           realDataFlags["EXCURSION"] = hasReal;
-          emit({ event: "category", type: "EXCURSION", results: hasReal ? results : [] });
-          if (hasReal) allResults.push(...results);
+          emit({ event: "category", type: "EXCURSION", results });
+          allResults.push(...results);
           return results;
         })
         .catch((err) => {
@@ -322,7 +322,7 @@ export async function runSearch(
   // Wait for all categories (Promise.allSettled never throws)
   await Promise.allSettled([flightTask, hotelTask, carTask, excursionTask]);
 
-  // If every requested category had NO real data, signal total provider failure
+  // Signal total failure only when every requested category has zero real data
   const requestedCategories = services.filter((s) =>
     ["FLIGHT", "HOTEL", "CAR", "EXCURSION"].includes(s),
   );

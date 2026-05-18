@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTripStore } from "@/lib/state/tripStore";
 import { TripCard, type TripSummary } from "@/components/trips/TripCard";
 import { EmptyTrips } from "@/components/trips/EmptyTrips";
 
@@ -18,11 +20,18 @@ async function fetchTrips(): Promise<TripsResponse> {
 }
 
 export default function TripsPage() {
+  const router = useRouter();
+  const resetTrip = useTripStore((s) => s.reset);
   const { data, isLoading, error } = useQuery<TripsResponse>({
     queryKey: ["trips"],
     queryFn: fetchTrips,
     staleTime: 30_000,
   });
+
+  function handleNewTrip() {
+    resetTrip();
+    router.push("/explore");
+  }
 
   return (
     <div className="mx-auto w-full max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
@@ -33,12 +42,13 @@ export default function TripsPage() {
         >
           My Trips
         </h1>
-        <Link
-          href="/explore"
+        <button
+          type="button"
+          onClick={handleNewTrip}
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-deep transition-colors"
         >
           + New trip
-        </Link>
+        </button>
       </div>
 
       {/* Anonymous banner */}

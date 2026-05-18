@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AvoloLogo } from "@/components/ui/AvoloLogo";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useTripStore } from "@/lib/state/tripStore";
 import type { TripSummary } from "@/components/trips/TripCard";
 
 export type SidebarVariant = "full" | "rail";
@@ -178,33 +179,6 @@ function NavItem({
   );
 }
 
-// ─── Rail: icon-only new-trip button ─────────────────────────────────────────
-function RailNewTripButton() {
-  const [hover, setHover] = useState(false);
-  return (
-    <Link
-      href="/explore"
-      title="New trip"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 40,
-        height: 40,
-        borderRadius: "var(--rounded-md)",
-        backgroundColor: hover ? "var(--color-primary-deep)" : "var(--color-primary)",
-        color: "var(--color-on-primary)",
-        textDecoration: "none",
-        transition: "background-color 120ms",
-        margin: "0 auto",
-      }}
-    >
-      <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">add</span>
-    </Link>
-  );
-}
 
 // ─── User menu dropdown ───────────────────────────────────────────────────────
 const MENU_ITEMS = [
@@ -330,12 +304,19 @@ interface SidebarProps {
 
 export function Sidebar({ variant = "full", onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
+  const resetTrip = useTripStore((s) => s.reset);
   const [grouped, setGrouped] = useState<ReturnType<typeof groupByDate>>({ today: [], yesterday: [], earlier: [] });
   const [total, setTotal] = useState(0);
 
   const rail = variant === "rail";
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+
+  const handleNewTrip = useCallback(() => {
+    resetTrip();
+    router.push("/explore");
+  }, [resetTrip, router]);
 
   useEffect(() => {
     fetch("/api/trips")
@@ -444,10 +425,29 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
         {/* New trip button */}
         <div style={{ marginBottom: "var(--spacing-xs)", padding: rail ? "0 var(--spacing-xs)" : "0 0 var(--spacing-xs)" }}>
           {rail ? (
-            <RailNewTripButton />
+            <button
+              type="button"
+              onClick={handleNewTrip}
+              title="New trip"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 40,
+                height: 40,
+                borderRadius: "var(--rounded-md)",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: "var(--color-primary)",
+                color: "var(--color-on-primary)",
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }} aria-hidden="true">add</span>
+            </button>
           ) : (
-            <Link
-              href="/explore"
+            <button
+              type="button"
+              onClick={handleNewTrip}
               style={{
                 ...t.buttonMd,
                 display: "flex",
@@ -457,7 +457,8 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
                 color: "var(--color-on-primary)",
                 borderRadius: "var(--rounded-md)",
                 padding: "10px 20px",
-                textDecoration: "none",
+                border: "none",
+                cursor: "pointer",
                 width: "100%",
                 boxSizing: "border-box",
               }}
@@ -469,7 +470,7 @@ export function Sidebar({ variant = "full", onClose }: SidebarProps) {
               <span style={{ fontSize: 11, opacity: 0.65, backgroundColor: "rgba(255, 255, 255, 0.18)", borderRadius: "var(--rounded-xs)", padding: "2px 5px" }}>
                 ⌘ T
               </span>
-            </Link>
+            </button>
           )}
         </div>
 

@@ -10,7 +10,7 @@ export function normalizeCars(raw: TravelPayoutsCarRaw[]): NormalizedResult[] {
     return {
       id: `tp-car-${car.id}`,
       serviceType: "CAR",
-      provider: "travelpayouts",
+      provider: "stub",
       priceEur: car.totalPriceEur,
       riskLevel: car.insurance === "basic" ? "MEDIUM" : "LOW",
       riskReasons,
