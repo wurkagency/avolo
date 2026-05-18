@@ -20,7 +20,7 @@ export default function GlobalError({
           *{box-sizing:border-box;margin:0;padding:0}
           body{
             font-family:Inter,sans-serif;
-            background:var(--color-surface,#f9f9f7);
+            background:var(--color-surface,#fafafa);
             color:var(--color-ink,#1f1f1f);
             display:flex;align-items:center;justify-content:center;
             min-height:100vh;padding:24px;
