@@ -68,7 +68,7 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
   const filtered = applyFilters(results, filters);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-8 flex items-center gap-3">
         <Link
           href={`/results?tripId=${encodeURIComponent(tripId)}`}
@@ -83,7 +83,7 @@ export function PaginatedResultsPage({ serviceType, title }: PaginatedResultsPag
         </div>
       </div>
 
-      <div className="flex gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start">
         <div className="hidden lg:block w-64 shrink-0 sticky top-24">
           <FilterSidebar results={results} filters={filters} onChange={setFilters} />
         </div>

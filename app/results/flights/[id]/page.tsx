@@ -33,7 +33,7 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
   const airlineLogoUrl = `https://pics.avs.io/100/50/${encodeURIComponent(f.airlineCode)}.png`;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-6">
         <Link href={`/results?tripId=${encodeURIComponent(tripId)}`} className="flex items-center gap-1 text-sm text-steel hover:text-ink">
           <span className="material-symbols-outlined text-base">arrow_back</span>
@@ -142,7 +142,7 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
 
 function LoadingState() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 flex items-center gap-3 text-steel">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10 flex items-center gap-3 text-steel">
       <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       <span>Loading…</span>
     </main>
@@ -151,7 +151,7 @@ function LoadingState() {
 
 function NotFound({ tripId }: { tripId: string }) {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <Link href={`/results?tripId=${encodeURIComponent(tripId)}`} className="flex items-center gap-1 text-sm text-steel hover:text-ink mb-6">
         <span className="material-symbols-outlined text-base">arrow_back</span>
         Back to results
