@@ -30,6 +30,8 @@ export default function ExploreStep5Page() {
       departureName: departure.name,
       destination: destination.iata,
       destinationName: destination.name,
+      ...(departure.nearbyIatas?.length ? { departureAirports: [departure.iata, ...departure.nearbyIatas] } : {}),
+      ...(destination.nearbyIatas?.length ? { destinationAirports: [destination.iata, ...destination.nearbyIatas] } : {}),
       services,
       departureDate,
       returnDate: isOneWay ? null : (returnDate ?? null),

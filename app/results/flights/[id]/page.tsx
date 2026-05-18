@@ -7,6 +7,7 @@ import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatTime, formatDuration, formatDate } from "@/lib/utils/formatDate";
 import { AddToTripButton } from "@/components/results/AddToTripButton";
 import { RiskBadge } from "@/components/results/RiskBadge";
+import { PhotoGallery } from "@/components/results/PhotoGallery";
 import type { NormalizedResult } from "@/types/search";
 
 export default function FlightDetailPage({ params }: { params: { id: string } }) {
@@ -16,6 +17,7 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
 
   const [result, setResult] = useState<NormalizedResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
 
   useEffect(() => {
     if (!tripId) return;
@@ -25,6 +27,15 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
       .catch(() => setResult(null))
       .finally(() => setLoading(false));
   }, [params.id, tripId]);
+
+  useEffect(() => {
+    if (!result?.flight?.arrivalAirport) return;
+    const q = encodeURIComponent(`${result.flight.arrivalAirport} city travel`);
+    fetch(`/api/photos/unsplash?query=${q}&count=6`)
+      .then((r) => r.json())
+      .then((d) => { const photos = d.photos as string[]; if (photos?.length) setGalleryPhotos(photos); })
+      .catch(() => null);
+  }, [result?.flight?.arrivalAirport]);
 
   if (loading) return <LoadingState />;
   if (!result?.flight) return <NotFound tripId={tripId} />;
@@ -41,11 +52,30 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
         </Link>
       </div>
 
+      {/* Hero image */}
+      {galleryPhotos[0] && (
+        <div className="rounded-lg overflow-hidden h-64 mb-6 bg-surface relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={galleryPhotos[0]} alt={`${f.arrivalAirport} destination`} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-4 left-6 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={airlineLogoUrl} alt={f.airline} className="h-8 object-contain bg-white/90 rounded px-2 py-1" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+            <div>
+              <p className="text-white font-bold text-lg leading-tight">{f.departureAirport} → {f.arrivalAirport}</p>
+              <p className="text-white/80 text-sm">{f.airline}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border border-hairline bg-canvas overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-4 p-6 border-b border-hairline bg-surface">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={airlineLogoUrl} alt={f.airline} className="h-10 object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+          {!galleryPhotos[0] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={airlineLogoUrl} alt={f.airline} className="h-10 object-contain" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+          )}
           <div>
             <h1 className="text-xl font-bold text-ink">{f.airline}</h1>
             <p className="text-sm text-steel">{f.airlineCode} · {f.cabin}</p>
@@ -111,6 +141,13 @@ export default function FlightDetailPage({ params }: { params: { id: string } })
               <p className="font-medium text-ink">{f.baggage}</p>
             </div>
           </section>
+
+          {galleryPhotos.length > 1 && (
+            <section>
+              <p className="text-xs font-semibold text-steel uppercase tracking-wide mb-3">Destination photos</p>
+              <PhotoGallery photos={galleryPhotos.slice(1)} alt={`${f.arrivalAirport} destination`} />
+            </section>
+          )}
 
           {result.riskReasons.length > 0 && (
             <section>

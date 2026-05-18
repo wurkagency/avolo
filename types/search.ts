@@ -101,6 +101,9 @@ export interface SearchRequest {
   departureName: string;
   destination: string;     // IATA
   destinationName: string;
+  /** Extra IATA codes when user selects "All airports near X" */
+  departureAirports?: string[];
+  destinationAirports?: string[];
   services: ServiceType[];
   departureDate: string;   // ISO date
   returnDate: string | null;

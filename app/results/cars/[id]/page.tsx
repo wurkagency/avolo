@@ -26,8 +26,15 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
       .then((d) => {
         const r = d.result as NormalizedResult | null;
         setResult(r ?? null);
-        // Only use the image URL provided by the booking source (TravelPayouts, etc.)
-        if (r?.car?.imageUrl) setGalleryPhotos([r.car.imageUrl]);
+        if (r?.car?.imageUrl) {
+          setGalleryPhotos([r.car.imageUrl]);
+        } else if (r?.car) {
+          const q = encodeURIComponent(`${r.car.make} ${r.car.model} car rental`);
+          fetch(`/api/photos/unsplash?query=${q}&count=5`)
+            .then((res) => res.json())
+            .then((data) => { const photos = data.photos as string[]; if (photos?.length) setGalleryPhotos(photos); })
+            .catch(() => null);
+        }
       })
       .catch(() => setResult(null))
       .finally(() => setLoading(false));
@@ -47,7 +54,7 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
         </Link>
       </div>
 
-      {/* Hero image — from TravelPayouts provider */}
+      {/* Hero image */}
       {galleryPhotos[0] && (
         <div className="rounded-lg overflow-hidden h-56 mb-6 bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}

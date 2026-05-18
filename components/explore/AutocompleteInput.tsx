@@ -23,9 +23,33 @@ interface AutocompleteInputProps {
   className?: string;
 }
 
+// Synthetic option representing "All airports near X"
+interface AllAirportsOption {
+  kind: "all-nearby";
+  primaryIata: string;
+  primaryCity: string;
+  nearbyIatas: string[];
+  label: string;
+}
+
+type DropdownItem =
+  | { kind: "airport"; airport: AirportOption }
+  | AllAirportsOption;
+
 function formatLabel(airport: AirportOption): string {
   const city = airport.municipality ?? airport.name;
   return `${city} (${airport.iataCode})`;
+}
+
+async function fetchNearbyIatas(iata: string): Promise<string[]> {
+  try {
+    const res = await fetch(`/api/airports/nearby?iata=${iata}&radius=100`);
+    if (!res.ok) return [];
+    const data = await res.json() as { airports: AirportOption[] };
+    return (data.airports ?? []).map((a) => a.iataCode);
+  } catch {
+    return [];
+  }
 }
 
 export function AutocompleteInput({
@@ -42,6 +66,7 @@ export function AutocompleteInput({
 
   const [inputValue, setInputValue] = useState(value ? formatLabel(toAirportOption(value)) : "");
   const [options, setOptions] = useState<AirportOption[]>([]);
+  const [items, setItems] = useState<DropdownItem[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
@@ -61,11 +86,11 @@ export function AutocompleteInput({
   const fetchOptions = useCallback(async (query: string) => {
     if (query.trim().length < 2) {
       setOptions([]);
+      setItems([]);
       setOpen(false);
       return;
     }
 
-    // Cancel previous in-flight request
     abortRef.current?.abort();
     abortRef.current = new AbortController();
 
@@ -73,10 +98,34 @@ export function AutocompleteInput({
     try {
       const results = await searchAirports(query, abortRef.current?.signal);
       setOptions(results);
+
+      // Build dropdown items: individual airports + one "All nearby" option for the top match
+      const dropdownItems: DropdownItem[] = results.map((a) => ({ kind: "airport" as const, airport: a }));
+
+      // For the best match, asynchronously add a "All airports near X" option
+      if (results.length > 0 && results[0]) {
+        const topAirport = results[0];
+        fetchNearbyIatas(topAirport.iataCode).then((nearbyIatas) => {
+          if (nearbyIatas.length > 0) {
+            const city = topAirport.municipality ?? topAirport.name;
+            const allOption: AllAirportsOption = {
+              kind: "all-nearby",
+              primaryIata: topAirport.iataCode,
+              primaryCity: city,
+              nearbyIatas,
+              label: `All airports near ${city} (${[topAirport.iataCode, ...nearbyIatas.slice(0, 3)].join(", ")}${nearbyIatas.length > 3 ? "…" : ""})`,
+            };
+            setItems((prev) => [allOption, ...prev.filter((i) => i.kind === "airport")]);
+          }
+        }).catch(() => null);
+      }
+
+      setItems(dropdownItems);
       setOpen(results.length > 0);
       setActiveIndex(-1);
     } catch {
       setOptions([]);
+      setItems([]);
       setOpen(false);
     } finally {
       setLoading(false);
@@ -85,7 +134,6 @@ export function AutocompleteInput({
 
   function handleInputChange(raw: string) {
     setInputValue(raw);
-    // Clear the selected value when the user edits freely
     if (value && raw !== formatLabel(toAirportOption(value))) {
       onChange(null);
     }
@@ -103,6 +151,21 @@ export function AutocompleteInput({
     setInputValue(formatLabel(airport));
     setOpen(false);
     setOptions([]);
+    setItems([]);
+    setActiveIndex(-1);
+  }
+
+  function selectAllNearby(opt: AllAirportsOption) {
+    const dest: TripDestination = {
+      iata: opt.primaryIata,
+      name: `All airports near ${opt.primaryCity}`,
+      nearbyIatas: opt.nearbyIatas,
+    };
+    onChange(dest);
+    setInputValue(`All airports near ${opt.primaryCity}`);
+    setOpen(false);
+    setOptions([]);
+    setItems([]);
     setActiveIndex(-1);
   }
 
@@ -118,7 +181,7 @@ export function AutocompleteInput({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setActiveIndex((i) => Math.min(i + 1, options.length - 1));
+        setActiveIndex((i) => Math.min(i + 1, items.length - 1));
         break;
       case "ArrowUp":
         e.preventDefault();
@@ -126,9 +189,10 @@ export function AutocompleteInput({
         break;
       case "Enter":
         e.preventDefault();
-        if (activeIndex >= 0 && activeIndex < options.length) {
-          const opt = options[activeIndex];
-          if (opt) selectOption(opt);
+        if (activeIndex >= 0 && activeIndex < items.length) {
+          const item = items[activeIndex];
+          if (item?.kind === "airport") selectOption(item.airport);
+          else if (item?.kind === "all-nearby") selectAllNearby(item);
         } else if (options.length === 1 && options[0]) {
           selectOption(options[0]);
         }
@@ -145,7 +209,6 @@ export function AutocompleteInput({
     }
   }
 
-  // Scroll active item into view
   useEffect(() => {
     if (activeIndex < 0) return;
     const item = listRef.current?.children[activeIndex] as HTMLElement | undefined;
@@ -257,67 +320,77 @@ export function AutocompleteInput({
       </div>
 
       {/* Dropdown */}
-      {open && options.length > 0 && (
+      {open && items.length > 0 && (
         <ul
           ref={listRef}
           id={listboxId}
           role="listbox"
           aria-label={label}
-          className="absolute top-full left-0 right-0 mt-1 z-50 bg-surface border border-hairline rounded-xl shadow-lg max-h-60 overflow-y-auto py-1"
+          className="absolute top-full left-0 right-0 mt-1 z-50 bg-surface border border-hairline rounded-xl shadow-lg max-h-64 overflow-y-auto py-1"
         >
-          {options.map((airport, i) => {
-            const city = airport.municipality ?? airport.name;
+          {items.map((item, i) => {
             const isActive = i === activeIndex;
+            if (item.kind === "all-nearby") {
+              return (
+                <li
+                  key={`all-nearby-${item.primaryIata}`}
+                  id={`${id}-option-${i}`}
+                  role="option"
+                  aria-selected={isActive}
+                  onMouseDown={(e) => { e.preventDefault(); selectAllNearby(item); }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-hairline",
+                    isActive ? "bg-cream-light" : "hover:bg-canvas",
+                  )}
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary shrink-0">travel_explore</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-primary font-medium truncate" style={{ fontFamily: "var(--font-inter)", fontSize: "14px" }}>
+                      {item.label}
+                    </span>
+                    <span className="text-steel" style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}>
+                      Search all nearby airports within 100 km
+                    </span>
+                  </div>
+                </li>
+              );
+            }
+
+            const { airport } = item;
+            const city = airport.municipality ?? airport.name;
             return (
               <li
                 key={airport.iataCode}
                 id={`${id}-option-${i}`}
                 role="option"
                 aria-selected={isActive}
-                onMouseDown={(e) => {
-                  e.preventDefault(); // prevent blur before click
-                  selectOption(airport);
-                }}
+                onMouseDown={(e) => { e.preventDefault(); selectOption(airport); }}
                 onMouseEnter={() => setActiveIndex(i)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors",
                   isActive ? "bg-cream-light text-primary" : "hover:bg-canvas",
                 )}
               >
-                {/* IATA badge */}
                 <span
-                  className={cn(
-                    "shrink-0 font-bold w-10 text-center",
-                    isActive ? "text-primary" : "text-primary",
-                  )}
+                  className="shrink-0 font-bold w-10 text-center text-primary"
                   style={{ fontFamily: "var(--font-inter)", fontSize: "12px", letterSpacing: "0.05em" }}
                 >
                   {airport.iataCode}
                 </span>
 
-                {/* City + name */}
                 <div className="flex flex-col min-w-0">
-                  <span
-                    className="text-ink truncate"
-                    style={{ fontFamily: "var(--font-inter)", fontSize: "15px", lineHeight: "1.4" }}
-                  >
+                  <span className="text-ink truncate" style={{ fontFamily: "var(--font-inter)", fontSize: "15px", lineHeight: "1.4" }}>
                     {city}
                   </span>
                   {city !== airport.name && (
-                    <span
-                      className="text-steel truncate"
-                      style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}
-                    >
+                    <span className="text-steel truncate" style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.3" }}>
                       {airport.name}
                     </span>
                   )}
                 </div>
 
-                {/* Country */}
-                <span
-                  className="ml-auto shrink-0 text-steel"
-                  style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}
-                >
+                <span className="ml-auto shrink-0 text-steel" style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}>
                   {airport.country}
                 </span>
               </li>

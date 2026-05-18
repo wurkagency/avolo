@@ -23,6 +23,8 @@ export interface TripDestination {
   iata: string;
   /** Human-readable label: "Paris (CDG)" */
   name: string;
+  /** Additional IATA codes when user selects "All airports near X" */
+  nearbyIatas?: string[];
 }
 
 // The complete in-progress trip being planned (before DB persistence)

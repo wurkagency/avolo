@@ -40,6 +40,19 @@ function validateSearchRequest(body: unknown): SearchRequest {
   if (typeof destinationName !== "string" || !destinationName) {
     throw new Error("destinationName is required");
   }
+
+  const departureAirports = b["departureAirports"];
+  const destinationAirports = b["destinationAirports"];
+  if (departureAirports !== undefined && departureAirports !== null) {
+    if (!Array.isArray(departureAirports) || departureAirports.some((c) => typeof c !== "string" || !/^[A-Z]{3}$/.test(c))) {
+      throw new Error("departureAirports must be an array of 3-letter IATA codes");
+    }
+  }
+  if (destinationAirports !== undefined && destinationAirports !== null) {
+    if (!Array.isArray(destinationAirports) || destinationAirports.some((c) => typeof c !== "string" || !/^[A-Z]{3}$/.test(c))) {
+      throw new Error("destinationAirports must be an array of 3-letter IATA codes");
+    }
+  }
   if (!Array.isArray(services) || services.length === 0) {
     throw new Error("services must be a non-empty array");
   }
@@ -98,6 +111,8 @@ function validateSearchRequest(body: unknown): SearchRequest {
     departureName,
     destination,
     destinationName,
+    ...(Array.isArray(departureAirports) ? { departureAirports: departureAirports as string[] } : {}),
+    ...(Array.isArray(destinationAirports) ? { destinationAirports: destinationAirports as string[] } : {}),
     services: services as SearchRequest["services"],
     departureDate,
     returnDate: typeof returnDate === "string" ? returnDate : null,
