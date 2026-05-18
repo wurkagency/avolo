@@ -228,10 +228,6 @@ export function QueryConfirmCard() {
   }
 
   function handleEditManually() {
-    // Flag in sessionStorage so travelers page knows to submit directly after step 4
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("avolo_manual_fill", "1");
-    }
     router.push("/explore/services");
   }
 
