@@ -203,13 +203,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const prompt = buildQueryPrompt(trimmed, todayIso);
 
     let rawAI: string;
+    let aiWarning: string | undefined;
     try {
       rawAI = await callAI(prompt);
     } catch (aiErr) {
       // All AI providers unavailable — fall back to regex-based parser
       console.warn("[interpret-query] AI unavailable, using fallback parser:", aiErr instanceof Error ? aiErr.message : aiErr);
       const fallback = fallbackParse(trimmed, today);
-      return NextResponse.json(fallback, { status: 200 });
+      return NextResponse.json(
+        { ...fallback, aiWarning: "Groq AI, Gemini AI, NVIDIA AI" },
+        { status: 200 },
+      );
     }
 
     const cleaned = extractJson(rawAI);

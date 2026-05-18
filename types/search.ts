@@ -123,6 +123,7 @@ export type SSEEvent =
   | { event: "status"; message: string }
   | { event: "category"; type: ServiceType; results: NormalizedResult[]; error?: string }
   | { event: "all_providers_failed" }
+  | { event: "ai_error"; providers: string[] }
   | { event: "done" }
   | { event: "error"; message: string };
 

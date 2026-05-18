@@ -10,7 +10,7 @@
 import { Prisma, type Trip } from "@prisma/client";
 import type { NormalizedResult, SSEEvent } from "@/types/search";
 import { db } from "@/lib/server/db";
-import { rankWithAI } from "@/lib/ai/aiClient";
+import { rankWithAIDetailed } from "@/lib/ai/aiClient";
 import {
   buildFlightRankingPrompt,
   buildHotelRankingPrompt,
@@ -67,13 +67,10 @@ async function fetchAndRankFlights(
   const hasRealData = normalized.some((r) => r.provider !== "stub");
 
   if (normalized.length > 0) {
-    try {
-      const prompt = buildFlightRankingPrompt(normalized, req.departure, req.destination);
-      const { ranked } = await rankWithAI(prompt);
-      normalized = applyRanking(normalized, ranked);
-    } catch (err) {
-      console.error("[searchService] Flight AI ranking failed:", err instanceof Error ? err.message : err);
-    }
+    const prompt = buildFlightRankingPrompt(normalized, req.departure, req.destination);
+    const { result: { ranked }, failedProviders } = await rankWithAIDetailed(prompt);
+    if (failedProviders.length > 0) emit({ event: "ai_error", providers: failedProviders });
+    normalized = applyRanking(normalized, ranked);
   }
 
   return [normalized, hasRealData];
@@ -106,13 +103,10 @@ async function fetchAndRankHotels(
           (new Date(req.returnDate).getTime() - new Date(req.departureDate).getTime()) / 86_400_000,
         ))
       : 1;
-    try {
-      const prompt = buildHotelRankingPrompt(normalized, req.destination, nights);
-      const { ranked } = await rankWithAI(prompt);
-      normalized = applyRanking(normalized, ranked);
-    } catch (err) {
-      console.error("[searchService] Hotel AI ranking failed:", err instanceof Error ? err.message : err);
-    }
+    const prompt = buildHotelRankingPrompt(normalized, req.destination, nights);
+    const { result: { ranked }, failedProviders } = await rankWithAIDetailed(prompt);
+    if (failedProviders.length > 0) emit({ event: "ai_error", providers: failedProviders });
+    normalized = applyRanking(normalized, ranked);
   }
 
   return [normalized, hasRealData];
@@ -145,13 +139,10 @@ async function fetchAndRankCars(
           (new Date(req.returnDate).getTime() - new Date(req.departureDate).getTime()) / 86_400_000,
         ))
       : 1;
-    try {
-      const prompt = buildCarRankingPrompt(normalized, req.destination, days);
-      const { ranked } = await rankWithAI(prompt);
-      normalized = applyRanking(normalized, ranked);
-    } catch (err) {
-      console.error("[searchService] Car AI ranking failed:", err instanceof Error ? err.message : err);
-    }
+    const prompt = buildCarRankingPrompt(normalized, req.destination, days);
+    const { result: { ranked }, failedProviders } = await rankWithAIDetailed(prompt);
+    if (failedProviders.length > 0) emit({ event: "ai_error", providers: failedProviders });
+    normalized = applyRanking(normalized, ranked);
   }
 
   return [normalized, hasRealData];
@@ -179,13 +170,10 @@ async function fetchAndRankExcursions(
   }
 
   if (normalized.length > 0) {
-    try {
-      const prompt = buildExcursionRankingPrompt(normalized, req.destination);
-      const { ranked } = await rankWithAI(prompt);
-      normalized = applyRanking(normalized, ranked);
-    } catch (err) {
-      console.error("[searchService] Excursion AI ranking failed:", err instanceof Error ? err.message : err);
-    }
+    const prompt = buildExcursionRankingPrompt(normalized, req.destination);
+    const { result: { ranked }, failedProviders } = await rankWithAIDetailed(prompt);
+    if (failedProviders.length > 0) emit({ event: "ai_error", providers: failedProviders });
+    normalized = applyRanking(normalized, ranked);
   }
 
   return [normalized, hasRealData];

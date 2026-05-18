@@ -8,6 +8,7 @@ import { SSEStatus } from "@/components/results/SSEStatus";
 import { ResultsGrid } from "@/components/results/ResultsGrid";
 import { SelectionBar } from "@/components/results/SelectionBar";
 import { AllProvidersFailedModal } from "@/components/results/AllProvidersFailedModal";
+import { AIProviderErrorModal } from "@/components/results/AIProviderErrorModal";
 import { useSelectionStore } from "@/lib/state/selectionStore";
 import type { ServiceType } from "@/types/trip";
 import type { NormalizedResult } from "@/types/search";
@@ -84,7 +85,8 @@ export function ResultsPageInner() {
 
   // Only open SSE for DRAFT trips (not yet searched); null disables the hook
   const needsStream = !tripLoading && trip?.status === "DRAFT";
-  const { status, results: sseResults, isDone: sseIsDone, error: sseError, allProvidersFailed } = useSSEStream(
+  const [aiModalDismissed, setAiModalDismissed] = useState(false);
+  const { status, results: sseResults, isDone: sseIsDone, error: sseError, allProvidersFailed, aiErrors } = useSSEStream(
     needsStream ? tripId : null,
   );
 
@@ -120,6 +122,9 @@ export function ResultsPageInner() {
     <>
     {allProvidersFailed && (
       <AllProvidersFailedModal destination={destinationName} />
+    )}
+    {!allProvidersFailed && aiErrors.length > 0 && !aiModalDismissed && (
+      <AIProviderErrorModal providers={aiErrors} onClose={() => setAiModalDismissed(true)} />
     )}
     <main className="mx-auto max-w-[840px] px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-10">

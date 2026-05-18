@@ -181,6 +181,30 @@ export async function callAI(prompt: string): Promise<string> {
   throw new Error("All AI providers failed");
 }
 
+// Like callAI but also returns which providers failed before success (or all if all failed).
+export async function callAIDetailed(
+  prompt: string,
+): Promise<{ text: string; failedProviders: string[] }> {
+  const PROVIDERS: Array<{ name: string; fn: () => Promise<string> }> = [
+    { name: "Groq AI",   fn: () => callGroq(prompt)   },
+    { name: "Gemini AI", fn: () => callGemini(prompt)  },
+    { name: "NVIDIA AI", fn: () => callNvidia(prompt)  },
+  ];
+
+  const failedProviders: string[] = [];
+  for (const { name, fn } of PROVIDERS) {
+    try {
+      const text = await fn();
+      return { text, failedProviders };
+    } catch (err) {
+      console.error(`[AI failover] ${name}:`, err instanceof Error ? err.message : err);
+      failedProviders.push(name);
+    }
+  }
+
+  throw Object.assign(new Error("All AI providers failed"), { failedProviders });
+}
+
 export async function callAIText(prompt: string): Promise<string> {
   const providers: Array<() => Promise<string>> = [
     () => callGroqText(prompt),
@@ -199,23 +223,45 @@ export async function callAIText(prompt: string): Promise<string> {
   throw new Error("All AI providers failed");
 }
 
-// ─── Ranking helper — calls AI and parses AiRankingResponse ───────────────
+// ─── Ranking helpers ───────────────────────────────────────────────────────
+
+function parseRankingResponse(raw: string): AiRankingResponse {
+  const parsed = JSON.parse(raw) as unknown;
+  if (
+    typeof parsed === "object" &&
+    parsed !== null &&
+    "ranked" in parsed &&
+    Array.isArray((parsed as { ranked: unknown }).ranked)
+  ) {
+    return parsed as AiRankingResponse;
+  }
+  throw new Error("AI response missing 'ranked' array");
+}
 
 export async function rankWithAI(prompt: string): Promise<AiRankingResponse> {
   try {
     const raw = await callAI(prompt);
-    const parsed = JSON.parse(raw) as unknown;
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "ranked" in parsed &&
-      Array.isArray((parsed as { ranked: unknown }).ranked)
-    ) {
-      return parsed as AiRankingResponse;
-    }
-    throw new Error("AI response missing 'ranked' array");
+    return parseRankingResponse(raw);
   } catch (err) {
     console.error("[AI ranking parse]", err instanceof Error ? err.message : err);
     return { ranked: [] };
+  }
+}
+
+/** Like rankWithAI but also returns which AI providers failed. Non-throwing. */
+export async function rankWithAIDetailed(
+  prompt: string,
+): Promise<{ result: AiRankingResponse; failedProviders: string[] }> {
+  try {
+    const { text, failedProviders } = await callAIDetailed(prompt);
+    const result = parseRankingResponse(text);
+    return { result, failedProviders };
+  } catch (err) {
+    const failedProviders: string[] =
+      err instanceof Error && "failedProviders" in err
+        ? (err as unknown as { failedProviders: string[] }).failedProviders
+        : [];
+    console.error("[AI ranking]", err instanceof Error ? err.message : err);
+    return { result: { ranked: [] }, failedProviders };
   }
 }

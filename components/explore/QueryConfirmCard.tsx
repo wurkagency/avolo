@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { useTripStore } from "@/lib/state/tripStore";
-import { nextMissingStep } from "@/lib/utils/wizardRouting";
 import { createSearch } from "@/lib/api/searchClient";
 import type { ServiceType } from "@/types/trip";
 import type { SearchRequest } from "@/types/search";
@@ -229,9 +228,11 @@ export function QueryConfirmCard() {
   }
 
   function handleEditManually() {
-    const store  = useTripStore.getState();
-    const filled = new Set(store.lastFilledFields);
-    router.push(nextMissingStep(store, filled));
+    // Flag in sessionStorage so travelers page knows to submit directly after step 4
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("avolo_manual_fill", "1");
+    }
+    router.push("/explore/services");
   }
 
   // ── Field display values ────────────────────────────────────────────────────
@@ -526,7 +527,12 @@ export function QueryConfirmCard() {
         <div style={{ display: "flex", gap: 10 }}>
           <button
             type="button"
-            onClick={() => router.push("/explore")}
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                sessionStorage.setItem("avolo_edit_mode", "1");
+              }
+              router.push("/explore");
+            }}
             style={{
               flex:            1,
               padding:         "13px 16px",

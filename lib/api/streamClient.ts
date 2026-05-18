@@ -13,6 +13,7 @@ export interface SSEStreamState {
   isDone: boolean;
   error: string | null;
   allProvidersFailed: boolean;
+  aiErrors: string[];
 }
 
 export function useSSEStream(tripId: string | null): SSEStreamState {
@@ -21,6 +22,7 @@ export function useSSEStream(tripId: string | null): SSEStreamState {
   const [isDone, setIsDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allProvidersFailed, setAllProvidersFailed] = useState(false);
+  const [aiErrors, setAiErrors] = useState<string[]>([]);
 
   const esRef = useRef<EventSource | null>(null);
   // Ref tracks completion so onerror closure doesn't read stale state
@@ -37,6 +39,7 @@ export function useSSEStream(tripId: string | null): SSEStreamState {
     setIsDone(false);
     setError(null);
     setAllProvidersFailed(false);
+    setAiErrors([]);
 
     const es = new EventSource(`/api/search/stream?tripId=${encodeURIComponent(tripId)}`);
     esRef.current = es;
@@ -64,6 +67,13 @@ export function useSSEStream(tripId: string | null): SSEStreamState {
 
         case "all_providers_failed":
           setAllProvidersFailed(true);
+          break;
+
+        case "ai_error":
+          setAiErrors((prev) => {
+            const merged = prev.concat(parsed.providers);
+            return merged.filter((p, i) => merged.indexOf(p) === i);
+          });
           break;
 
         case "done":
@@ -95,5 +105,5 @@ export function useSSEStream(tripId: string | null): SSEStreamState {
     };
   }, [tripId]);
 
-  return { status, results, isDone, error, allProvidersFailed };
+  return { status, results, isDone, error, allProvidersFailed, aiErrors };
 }

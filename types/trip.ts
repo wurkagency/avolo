@@ -47,6 +47,8 @@ export interface TripDraft {
 /** Returned by POST /api/interpret-query — a partial TripDraft with field tracking. */
 export interface ParsedQuery extends Partial<TripDraft> {
   filledFields: (keyof TripDraft)[];
+  /** Set when one or more AI providers failed during query parsing. */
+  aiWarning?: string;
 }
 
 export const defaultTripDraft: TripDraft = {

@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useBreakpoint } from "@/lib/hooks/useBreakpoint";
 import { useTripStore } from "@/lib/state/tripStore";
 import { useUiStore } from "@/lib/state/uiStore";
 import type { ParsedQuery } from "@/types/trip";
 import { MicPermissionModal } from "@/components/ui/MicPermissionModal";
 import { AvoloLogo } from "@/components/ui/AvoloLogo";
+import { AIProviderErrorModal } from "@/components/results/AIProviderErrorModal";
 
 // ─── Typography ───────────────────────────────────────────────────────────────
 const t = {
@@ -109,12 +111,28 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
 
 // ─── Embedded conversational input ───────────────────────────────────────────
 
-function HomeInput() {
+interface HomeInputProps {
+  onAiError?: (providers: string[]) => void;
+}
+
+function HomeInput({ onAiError }: HomeInputProps) {
   const router     = useRouter();
   const addToast   = useUiStore((s) => s.addToast);
 
-  // Pre-populate from the last raw query so "Edit query" restores what the user typed.
-  const [value,        setValue]       = useState(() => useTripStore.getState().rawQuery);
+  // On fresh mount: clear input unless the user explicitly clicked "Edit query"
+  // (signalled by sessionStorage flag set in QueryConfirmCard).
+  const [value, setValue] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const isEdit = sessionStorage.getItem("avolo_edit_mode");
+    if (isEdit) {
+      sessionStorage.removeItem("avolo_edit_mode");
+      return useTripStore.getState().rawQuery;
+    }
+    // Fresh navigation — reset rawQuery so the store stays consistent
+    useTripStore.getState().setRawQuery("");
+    return "";
+  });
+
   const [focused,      setFocused]     = useState(false);
   const [loading,      setLoading]     = useState(false);
   const [isListening,  setIsListening] = useState(false);
@@ -128,12 +146,6 @@ function HomeInput() {
 
   useEffect(() => {
     setMicSupported(getSpeechRecognitionCtor() !== null);
-  }, []);
-
-  // Sync rawQuery from store on every (re)mount so "Edit query" always restores
-  // the last typed text even when Next.js router cache keeps the component alive.
-  useEffect(() => {
-    setValue(useTripStore.getState().rawQuery);
   }, []);
 
   // Resize textarea whenever value changes; enforce 2-row minimum (52px).
@@ -168,6 +180,11 @@ function HomeInput() {
       }
 
       const parsed = await res.json() as ParsedQuery;
+
+      // Surface AI provider failures early
+      if (parsed.aiWarning && onAiError) {
+        onAiError(parsed.aiWarning.split(", "));
+      }
 
       // Clear any stale trip data from a previous search before applying the new query.
       // Without this, old fields (e.g. previous departure airport) bleed into the new search.
@@ -564,8 +581,20 @@ export function WelcomeState() {
   const bp       = useBreakpoint();
   const scale    = heroScale[bp];
   const isMobile = bp === "xs" || bp === "sm";
+  const { data: session } = useSession();
+  const [aiErrorProviders, setAiErrorProviders] = useState<string[]>([]);
+  const [aiModalDismissed, setAiModalDismissed] = useState(false);
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? null;
 
   return (
+    <>
+    {aiErrorProviders.length > 0 && !aiModalDismissed && (
+      <AIProviderErrorModal
+        providers={aiErrorProviders}
+        onClose={() => setAiModalDismissed(true)}
+      />
+    )}
     <div
       style={{
         flex: 1,
@@ -607,26 +636,32 @@ export function WelcomeState() {
               margin: 0,
             }}
           >
-            Come fly with us.
+            Come fly with us ♬
           </h1>
           <p
             style={{
-              fontSize: scale.subtitle,
+              fontSize:   isMobile ? 15 : 18,
               fontWeight: 400,
-              lineHeight: 1.15,
-              letterSpacing: scale.subtitleTracking,
-              fontFamily: "var(--font-editorial), 'Playfair Display', serif",
-              color: "var(--color-stone)",
-              margin: 0,
+              lineHeight: 1.5,
+              fontFamily: "var(--font-inter)",
+              color:      "var(--color-stone)",
+              margin:     0,
             }}
           >
-            Tell us where you want to go.
+            {firstName
+              ? `Hi ${firstName}. Tell us about your travel plans.`
+              : "Tell us about your travel plans."}
           </p>
         </div>
 
         {/* Conversational input */}
         <div style={{ width: "100%", textAlign: "left" }}>
-          <HomeInput />
+          <HomeInput
+            onAiError={(providers) => {
+              setAiErrorProviders(providers);
+              setAiModalDismissed(false);
+            }}
+          />
           <p
             style={{
               ...t.caption,
@@ -655,5 +690,6 @@ export function WelcomeState() {
         </div>
       </div>
     </div>
+    </>
   );
 }
