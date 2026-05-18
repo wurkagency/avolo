@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/server/auth";
 import { callAI } from "@/lib/ai/aiClient";
 import { buildQueryPrompt } from "@/lib/ai/queryPrompt";
+import { fallbackParse } from "@/lib/ai/fallbackParser";
 import type { TripDraft, ServiceType, Flexibility, ParsedQuery } from "@/types/trip";
 
 export type { ParsedQuery };
@@ -204,9 +205,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let rawAI: string;
     try {
       rawAI = await callAI(prompt);
-    } catch {
-      // All AI providers unavailable — return empty result so wizard uses manual form
-      return NextResponse.json({ filledFields: [] }, { status: 200 });
+    } catch (aiErr) {
+      // All AI providers unavailable — fall back to regex-based parser
+      console.warn("[interpret-query] AI unavailable, using fallback parser:", aiErr instanceof Error ? aiErr.message : aiErr);
+      const fallback = fallbackParse(trimmed, today);
+      return NextResponse.json(fallback, { status: 200 });
     }
 
     const cleaned = extractJson(rawAI);
